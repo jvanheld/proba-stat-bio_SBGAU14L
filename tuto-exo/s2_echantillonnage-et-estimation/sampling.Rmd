@@ -1,0 +1,96 @@
+---
+title: "Tuto/exo: tirage de nombres d'une distribution de probabilité"
+output:
+  html_notebook:
+    code_folding: show
+    collapsed: no
+    fig_caption: yes
+    highlight: zenburn
+    theme: cerulean
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_document:
+    fig_caption: yes
+    highlight: zenburn
+    toc: yes
+    toc_depth: 3
+  html_document:
+    code_folding: show
+    collapsed: yes
+    fig_caption: yes
+    highlight: zenburn
+    theme: cerulean
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+editor_options:
+  chunk_output_type: inline
+---
+
+## Tutoriel
+
+Dans ce tuto, nous illustrons quelques concepts de base de l'échantillonnage statistique, et proposons quelques exercices pour vous familiariser avec ces concepts, et avec les fonctions R pertinentes. 
+
+
+
+```{r normal_sample}
+# Generate 100,000 numbers from a normal distribution with mean=0 and standard deviation=1
+numbers <- rnorm(n = 100000, mean = 0, sd = 1)
+
+# Plot a histogram of the generated numbers
+hist(numbers, main="Distribution of 100,000 random numbers from a normal distribution", xlab="Value")
+```
+
+### Séparation entre paramètres et exécution
+
+Nous réécrivons ce script minimaliste en séparant les paramètres, ce qui 
+- facilite la lisibilité du code, 
+- permet d'enrichir la documentation (commenter chaque paramètre)
+- tester l'impact des paramètres sur le résultat
+
+Nous utilisons la fonction `paste0()` pour écrire le titre du graphique en y incluant la valeur numérique de ces paramètres. 
+
+Astuce : par défaut, R affiche les grands nombres en notation scientifique (ex `1e+5`). Pour éviter cela, ous remplaçons `n` par `format(n, scientific=FALSE)` dans la commande `paste0()`. 
+
+```{r normal_sample_param}
+# Parameters
+n <- 100000 # Sample size
+m <- 50     # Mean of the normal distribution
+s <- 5      # Standard deviation of the normal distribution
+
+# Sample n numbers in a normal population of mean m and standard deviation s
+numbers <- rnorm(n = n, mean = m, sd = s)
+
+# Plot a histogram of the generated numbers
+hist(numbers, 
+     main=paste0("Sampling from a normal distribution",
+                 "(n=", format(n, scientific = FALSE),
+                 ", m=", m,
+                 ", s=", s,
+                 ")"))
+
+```
+
+
+
+## Exercices : tirage de nombres dans une distribution aléatoire
+
+1. Améliorez la présentation de l'histogramme, de la façon suivante: 
+
+    - utilisez l'option `breaks` pour réduire la largeur des intervalles de classe
+    - choisissez un e couleur qui vous plaît pour le corps et les contours de l'histogramme
+    - adaptez les options pour afficher les valeurs numériques horizontalement sur l'axe Y (et sur l'axe X)
+
+
+2. Ajoutez des blocs de code pour des tirages de même taille dans les distributions suivantes
+
+    - uniforme
+    - chi2
+    - Poisson
+    
+Pour chaque distribution, jouez sur les paramètres pour évaluer leur impact sur la forme de la distribution. 
+
+Astuce : pour la distribution Poisson, utilisez des intervalles de classe séparés par des pas de 1
+
+
