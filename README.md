@@ -16,4 +16,4 @@ Supports du cours "Probabilités et statistiques pour la biologie" (SBGAU14L) en
 |--------------------------------|----------|
 | Premiers pas avec R            |  |
 | Statistiques descriptives      |  |
-| Echantillonnage et estimation  | tuto-exo/s2_echantillonnage-et-estimation/sampling.Rmd |
+| Echantillonnage et estimation  | [sampling.Rmd](tuto-exo/s2_echantillonnage-et-estimation/sampling.Rmd) |
