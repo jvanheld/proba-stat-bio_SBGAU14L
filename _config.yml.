@@ -12,3 +12,16 @@ description: >
 
 baseurl: "/proba-stat-bio_SBGAU14L"
 url: "https://jvanheld.github.io"
+
+# --- Personnalisation du thème ---
+show_downloads: true
+logo: /img/logo_amu.png
+
+# --- Navigation (liens du menu) ---
+nav:
+  - name: "Accueil"
+    link: /
+  - name: "Diaporamas"
+    link: /slides
+  - name: "Travaux pratiques"
+    link: /tuto-exo/
