@@ -1,0 +1,8 @@
+remote_theme: pages-themes/minimal@v0.2.0
+plugins:
+  - jekyll-remote-theme
+title: Mon Cours Statistiques
+description: >
+  [💻 Dépôt GitHub](https://github.com/jvanheld/proba-stat-bio_SBGAU14L/) •
+  [⬇️ Télécharger ZIP](https://github.com/jvanheld/proba-stat-bio_SBGAU14L//archive/refs/heads/main.zip) •
+  [📦 Télécharger TAR](https://github.com/jvanheld/proba-stat-bio_SBGAU14L//archive/refs/heads/main.tar.gz)
