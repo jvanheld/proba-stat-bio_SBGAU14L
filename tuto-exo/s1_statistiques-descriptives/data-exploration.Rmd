@@ -1,0 +1,220 @@
+---
+title: "Tuto-TP – Apprivoiser ses données – statistiques descriptives et exploratoires"
+author: "Jacques van Helden"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    self_contained: TRUE
+    fig_caption: yes
+    highlight: zenburn
+    theme: cerulean
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+    code_folding: "hide"
+  ioslides_presentation:
+    slide_level: 2
+    self_contained: TRUE
+    colortheme: dolphin
+    fig_caption: yes
+    fig_height: 5
+    fig_width: 7
+    fonttheme: structurebold
+    highlight: tango
+    smaller: yes
+    toc: yes
+    widescreen: yes
+  pdf_document:
+    fig_caption: yes
+    highlight: zenburn
+    toc: yes
+    toc_depth: 3
+  beamer_presentation:
+    colortheme: dolphin
+    fig_caption: yes
+    fig_height: 5
+    fig_width: 7
+    fonttheme: structurebold
+    highlight: tango
+    incremental: no
+    keep_tex: no
+    slide_level: 2
+    theme: Montpellier
+    toc: yes
+  revealjs::revealjs_presentation:
+    theme: night
+    transition: none
+    self_contained: true
+    css: ../slides.css
+  slidy_presentation:
+    smart: no
+    slide_level: 2
+    self_contained: yes
+    fig_caption: yes
+    fig_height: 5
+    fig_width: 7
+    highlight: tango
+    incremental: no
+    keep_md: yes
+    smaller: yes
+    theme: cerulean
+    toc: yes
+    widescreen: yes
+  powerpoint_presentation:
+    slide_level: 2
+    fig_caption: yes
+    fig_height: 5
+    fig_width: 7
+    toc: yes
+font-import: http://fonts.googleapis.com/css?family=Risque
+subtitle: Proba/Stat pour la biologie (SBGAU14L)
+font-family: Garamond
+transition: linear
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r settings, include=FALSE, echo=FALSE, eval=TRUE}
+
+options(width = 300)
+# options(encoding = 'UTF-8')
+knitr::opts_chunk$set(
+  fig.width = 7, fig.height = 5, 
+  fig.path = 'figures/canale23_',
+  fig.align = "center", 
+  size = "tiny", 
+  echo = TRUE, 
+  eval = TRUE, 
+  warning = FALSE, 
+  message = FALSE, 
+  results = TRUE, 
+  comment = "")
+
+options(scipen = 12) ## Max number of digits for non-scientific notation
+# knitr::asis_output("\\footnotesize")
+
+```
+
+## Downloading and loading a data file
+
+In this section, we will 
+
+- create a working directory for this tutorial
+- download the data file from the web in this directory
+- load it in R
+- check the content of this file
+
+### Creating your working directory
+
+On your computer, create a folder for this practical. For this tutorial, we will assume that this folder is named `canale23_analysis`  and is located at the root of your home directory. 
+
+The code hereafter will create this directory for you. 
+
+```{r workdir}
+#### Working directory ####
+
+# Define the path of the working directory
+wd = "~/canale23_analysis"
+
+# Create the working directory
+dir.create(wd, showWarnings = FALSE, recursive = TRUE)
+
+setwd(wd)
+list.files()
+
+```
+
+### Downloading the data file
+
+TO BE WRITTEN
+
+```{r data_download}
+#### Data directory ####
+dir_data = file.path(wd, "data")
+dir.create(dir_data, showWarnings = FALSE, recursive = TRUE)
+
+
+list.files(dir_data)
+```
+
+
+## Loading the data files
+
+We will load 3 data files, that will be used at different stages of our analysis. 
+These files are provided as text files, with columns separated by tabulations (the so-called "tab-separated values" format, with extension `.tsv`).
+
+| File | Content |
+|------------------------------|-------------------------------------------|
+| `canale_2023_protein_log2-LFQ.tsv` | The proteomics quantification table, with one row per protein, and one column per sample. Note that the first column provides protein IDs, and the first row sample IDs |
+| `canale_2023_protein-names.tsv` | One row per protein, and columns with the protein IDs, protein names and gene names. Note that a protein can have one or more IDs (allocated by different databases), and zero, one or more protein or gene names (some proteins/genes of unknown function have no name, ans some proteins/genes can have several synonyms). |
+| `sample_groups.tsv` | A 2-columns tab-separated files indicating the group to which each sample belongs. In this study case, there are only two groups : **HCC** for Human cancer cells, and **Liver** for liver cells.  |
+
+```{r load_data}
+#### Load the data file ####
+log2_LFQ = read.delim(file = file.path(dir_data, "canale_2023_protein_log2-LFQ.tsv"), 
+                      sep="\t", 
+                      header=TRUE, 
+                      row.names=1)
+# View(log2_LFQ) ## Just for checking, but disactivated to avoid blocking the execution
+
+## Load a separate table indicating which sample belongs to which group (cancer or liver cells)
+sample_groups = read.delim(file.path(dir_data, "sample_groups.tsv"), sep="\t", header=TRUE, row.names=1)
+
+## Load the protein names from a separate table
+protein_names = read.delim(file = file.path(dir_data, "canale_2023_protein-names.tsv"), sep = "\t")
+
+```
+
+### Checking the loaded tables
+
+```{r check_loaded}
+
+## Dimensions of the data table
+dim(log2_LFQ)
+
+## Number of NA values (non-allocated)
+barplot(sort(apply(is.na(log2_LFQ), 1, sum), decreasing = TRUE))
+
+## Number of rows containing not a single NA value
+dim(na.omit(log2_LFQ))
+
+```
+
+
+## Descriptive statistics
+
+```{r}
+summary(log2_LFQ)
+
+```
+
+## Handling NA values
+
+```{r na_handling}
+
+```
+
+
+## Exploratory statistics
+
+### Heat map
+
+```{r heatmap, fig.width=12, fig.height=12, out.width="100%", fig.cap="Heatmap of the log2(LFQ) values. "}
+log2_LFQ_mat = as.matrix(log2_LFQ)
+log2_LFQ_mat[!is.finite(log2_LFQ_mat)] = NA
+# View(log2_LFQ_mat)
+
+# mar_ori <- par("mar", no.readonly = TRUE) # Store the original values for figure margins
+# par(mar = c(10, 4, 2, 2))
+
+heatmap(log2_LFQ_mat, Rowv = NA, Colv=NA, 
+        scale="none", labRow="NA",
+#        main="Canale (2023), log2(LFQ)",
+        cexCol = 0.7, 
+#        xlab = "samples", 
+        ylab = "Proteins log2(LFQ)")
+# par(mar = mar_ori) ## Restore the original value for figure margins
+```
+
+
