@@ -14,6 +14,6 @@ Supports du cours "Probabilités et statistiques pour la biologie" (SBGAU14L) en
 
 | Sujet | Tuto-exo |
 |--------------------------------|----------|
-| Premiers pas avec R            |  |
-| Statistiques descriptives      |  |
-| Echantillonnage et estimation  | [sampling.Rmd](tuto-exo/s2_echantillonnage-et-estimation/sampling.Rmd) |
+| Premiers pas avec R            |   |
+| Apprivoiser les données : statistiques descriptives et exploratoires      | [data-exploration.Rmd](tuto-exo/s1_statistiques-descriptives/data-exploration.Rmd) |
+| Des populations aux échantillons et retour : échantillonnage et estimation  | [sampling.Rmd](tuto-exo/s2_echantillonnage-et-estimation/sampling.Rmd) |
