@@ -96,6 +96,22 @@ options(scipen = 12) ## Max number of digits for non-scientific notation
 
 ```
 
+
+## Abbreviations
+
+| Abbreviation | Meaning |
+|--------------|----------------------------------------|
+| LFQ | Label-Free Quantification |
+| log2 | base-2 logarithm |
+| IQR | inter-quartile range |
+| Q1 | First quartile |
+| Q2 | Second quartile = median |
+| Q3 | Third quartile |
+
+## Study caase
+
+Canale (2023) ... (summary TO BE WRITTEN)
+
 ## Downloading and loading a data file
 
 In this section, we will 
@@ -192,29 +208,115 @@ summary(log2_LFQ)
 ## Handling NA values
 
 ```{r na_handling}
-
+## Count NA values per row
+## dim(na.omit(log2_LFQ))
+## table(apply(is.na(log2_LFQ), 1, sum) == 0)
+na_per_row = apply(is.na(log2_LFQ), 1, sum)
+hist(na_per_row, 
+     col="#FFBBBB",
+     breaks=(0:70)-0.5,
+     main = "Missing values per protein", 
+     xlab = " Number of NA values", 
+     ylab = "Number of proteins")
 ```
 
+## Standardization
 
-## Exploratory statistics
+### Heat map of the log2(LFQ)
 
-### Heat map
-
-```{r heatmap, fig.width=12, fig.height=12, out.width="100%", fig.cap="Heatmap of the log2(LFQ) values. "}
-log2_LFQ_mat = as.matrix(log2_LFQ)
-log2_LFQ_mat[!is.finite(log2_LFQ_mat)] = NA
-# View(log2_LFQ_mat)
-
-# mar_ori <- par("mar", no.readonly = TRUE) # Store the original values for figure margins
-# par(mar = c(10, 4, 2, 2))
-
-heatmap(log2_LFQ_mat, Rowv = NA, Colv=NA, 
-        scale="none", labRow="NA",
+```{r heatmap_log2LFQ, fig.width=12, fig.height=12, out.width="100%", fig.cap="**Heatmap of the proteome abundance.**  Rows: proteins;  Columns: samples. The color scale is proportional to  log2(LFQ) values. Note that the data table contains 8192 proteins, whereas the figure is 2304w2304 pixels. Rows of the heatmap thus represent a subset of the proteins. "}
+heatmap(as.matrix(log2_LFQ), Rowv = NA, Colv=NA, 
+        scale="none", labRow=NA,
 #        main="Canale (2023), log2(LFQ)",
         cexCol = 0.7, 
 #        xlab = "samples", 
         ylab = "Proteins log2(LFQ)")
-# par(mar = mar_ori) ## Restore the original value for figure margins
+```
+
+### Dataset-wise standardization
+
+```{r standardisation}
+
 ```
 
 
+### Protein-wise standardization
+
+```{r protein_standardization}
+#### Protein-wise standardization ####
+
+## Protein means
+mean_per_protein = apply(log2_LFQ, 1, mean, na.rm=TRUE)
+
+## Protein means
+sd_per_protein = apply(log2_LFQ, 1, sd, na.rm=TRUE)
+
+## Center proteins
+protein_centred = sweep(log2_LFQ, MARGIN = 1, STATS = mean_per_protein, FUN = "-", check.margin = TRUE)
+
+
+## Compute protein-wise standrardized abundances (centred and scaled)
+protein_stand = sweep(protein_centred, MARGIN = 1, STATS = sd_per_protein, FUN = "/", check.margin  = TRUE)
+
+## Check the ranges before and after centering and standardization
+range(log2_LFQ, na.rm = TRUE) # Range of all abundances before standardization
+range(protein_centred, na.rm = TRUE) # Range of all abundances after centering
+range(apply(protein_centred, 1, mean, na.rm = TRUE), na.rm=TRUE) # Range of the means per protein after centering
+range(protein_stand, na.rm = TRUE) # Range of all abundances after standardization
+range(apply(protein_stand, 1, mean, na.rm = TRUE), na.rm=TRUE) # Range of the means per protein after centering
+range(apply(protein_stand, 1, sd, na.rm = TRUE), na.rm=TRUE) # Range of the standard deviation per protein after centering
+```
+
+```{r hist_parameters_per_protein, fig.width=14, fig.height=4, out.width="100%", fig.cap="**Protein-wise parameters. **"}
+
+par(mfrow=c(1,2))
+hist(mean_per_protein, main="Means per protein", breaks=100, xlab= "mean(log2(LFQ))", ylab="Number of proteins", col="#66FFFF")
+hist(sd_per_protein, main="Standard deviations per protein", breaks=100, xlab= "sd(log2(LFQ))", ylab="Number of proteins", col="#FFDDBB")
+
+par(mfrow=c(1,1))
+
+```
+
+```{r hist_standardized_abundances, fig.width=7, fig.height=10, out.width="70%", fig.cap="**Protein abundance values before and after protein-wise standardization**"}
+
+par(mfrow=c(3,1))
+
+hist(unlist(log2_LFQ), breaks=100, main="Before protein-wise standardization", 
+     col = "#FFFFBB",
+     xlab="log2(LFQ)", ylab = "Number of proteins")
+abline(v=mean(unlist(log2_LFQ), na.rm=TRUE), lwd=2, col="#0000FF")
+
+hist(unlist(protein_centred), breaks=100, main="After protein-wise centering",
+     col = "#BBDDFF",
+     xlab="log2(LFQ) - protein-wise mean(log2(LFQ)", ylab = "Number of proteins")
+abline(v=0, lwd=2, col="#0000FF")
+
+hist(unlist(protein_stand), breaks=100, main="After protein-wise standardization",
+     col = "#BBFFDD",
+     xlab="z-score of log2(LFQ)", ylab = "Number of proteins")
+abline(v=0, lwd=2, col="#0000FF")
+
+par(mfrow=c(1,1))
+
+```
+
+
+```{r heatmap_log2LFQ_std, fig.width=12, fig.height=12, out.width="100%", fig.cap="**Heatmap of the  protein-wise standardized abundances**  Rows: proteins;  Columns: samples. The color scale reflects the protein-wise standardized  log2(LFQ) values (z-scores, i.e. centred to 0 and scaled to 1). Note that the data table contains 8192 proteins, whereas the figure is 2304w2304 pixels. Rows of the heatmap thus represent a subset of the proteins. "}
+
+## Choose a palette to distinguish negative from positive values
+my_colors <- colorRampPalette(c("green", "white", "red"))(100)
+zlim <- quantile(abs(protein_stand), na.rm = TRUE, probs = 0.95)
+breaks <- seq(-zlim, zlim, length.out = 101)
+
+heatmap(as.matrix(protein_stand), Rowv = NA, Colv=NA, 
+        scale="none", 
+        col = my_colors,
+        breaks = breaks,
+        labRow=NA,
+        main="Protein-wise standardized log2(LFQ)",
+        cexCol = 0.7, 
+        xlab = NA, 
+        ylab = "Protein-wise z-scores of log2(LFQ)")
+
+
+```
