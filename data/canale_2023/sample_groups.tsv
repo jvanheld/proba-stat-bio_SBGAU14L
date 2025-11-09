@@ -1,70 +1,70 @@
-sample	group
-HCC_1	HCC
-HCC_10	HCC
-HCC_101	HCC
-HCC_102	HCC
-HCC_103	HCC
-HCC_104	HCC
-HCC_109	HCC
-HCC_11	HCC
-HCC_110	HCC
-HCC_111	HCC
-HCC_12	HCC
-HCC_14	HCC
-HCC_15	HCC
-HCC_16	HCC
-HCC_17	HCC
-HCC_18	HCC
-HCC_20	HCC
-HCC_22	HCC
-HCC_23	HCC
-HCC_26	HCC
-HCC_27	HCC
-HCC_28	HCC
-HCC_29	HCC
-HCC_31	HCC
-HCC_32	HCC
-HCC_34	HCC
-HCC_35	HCC
-HCC_4	HCC
-HCC_41	HCC
-HCC_46	HCC
-HCC_47	HCC
-HCC_5	HCC
-HCC_7	HCC
-HCC_9	HCC
-Liver_1	Liver
-Liver_10	Liver
-Liver_101	Liver
-Liver_102	Liver
-Liver_103	Liver
-Liver_104	Liver
-Liver_109	Liver
-Liver_11	Liver
-Liver_110	Liver
-Liver_111	Liver
-Liver_12	Liver
-Liver_14	Liver
-Liver_15	Liver
-Liver_17	Liver
-Liver_18	Liver
-Liver_19	Liver
-Liver_20	Liver
-Liver_22	Liver
-Liver_23	Liver
-Liver_26	Liver
-Liver_27	Liver
-Liver_28	Liver
-Liver_29	Liver
-Liver_32	Liver
-Liver_33	Liver
-Liver_34	Liver
-Liver_35	Liver
-Liver_4	Liver
-Liver_41	Liver
-Liver_42	Liver
-Liver_46	Liver
-Liver_47	Liver
-Liver_5	Liver
-Liver_6	Liver
-Liver_9	Liver
+sample_group	sample	group
+HCC_1	HCC	1
+HCC_10	HCC	10
+HCC_101	HCC	101
+HCC_102	HCC	102
+HCC_103	HCC	103
+HCC_104	HCC	104
+HCC_109	HCC	109
+HCC_11	HCC	11
+HCC_110	HCC	110
+HCC_111	HCC	111
+HCC_12	HCC	12
+HCC_14	HCC	14
+HCC_15	HCC	15
+HCC_16	HCC	16
+HCC_17	HCC	17
+HCC_18	HCC	18
+HCC_20	HCC	20
+HCC_22	HCC	22
+HCC_23	HCC	23
+HCC_26	HCC	26
+HCC_27	HCC	27
+HCC_28	HCC	28
+HCC_29	HCC	29
+HCC_31	HCC	31
+HCC_32	HCC	32
+HCC_34	HCC	34
+HCC_35	HCC	35
+HCC_4	HCC	4
+HCC_41	HCC	41
+HCC_46	HCC	46
+HCC_47	HCC	47
+HCC_5	HCC	5
+HCC_7	HCC	7
+HCC_9	HCC	9
+Liver_1	Liver	1
+Liver_10	Liver	10
+Liver_101	Liver	101
+Liver_102	Liver	102
+Liver_103	Liver	103
+Liver_104	Liver	104
+Liver_109	Liver	109
+Liver_11	Liver	11
+Liver_110	Liver	110
+Liver_111	Liver	111
+Liver_12	Liver	12
+Liver_14	Liver	14
+Liver_15	Liver	15
+Liver_17	Liver	17
+Liver_18	Liver	18
+Liver_19	Liver	19
+Liver_20	Liver	20
+Liver_22	Liver	22
+Liver_23	Liver	23
+Liver_26	Liver	26
+Liver_27	Liver	27
+Liver_28	Liver	28
+Liver_29	Liver	29
+Liver_32	Liver	32
+Liver_33	Liver	33
+Liver_34	Liver	34
+Liver_35	Liver	35
+Liver_4	Liver	4
+Liver_41	Liver	41
+Liver_42	Liver	42
+Liver_46	Liver	46
+Liver_47	Liver	47
+Liver_5	Liver	5
+Liver_6	Liver	6
+Liver_9	Liver	9
