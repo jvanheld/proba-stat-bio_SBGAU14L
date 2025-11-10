@@ -67,7 +67,7 @@ output:
     fig_width: 7
     toc: yes
 font-import: http://fonts.googleapis.com/css?family=Risque
-subtitle: Proba/Stat pour la biologie (SBGAU14L)
+subtitle: Proba/stat pour la biologie (SBGAU14L)
 font-family: Garamond
 transition: linear
 editor_options: 
@@ -131,7 +131,7 @@ The code hereafter will create this directory for you.
 #### Working directory ####
 
 # Define the path of the working directory
-wd = "~/canale23_analysis"
+wd = "~/proba_stat_bio_TP/canale_2023"
 
 # Create the working directory
 dir.create(wd, showWarnings = FALSE, recursive = TRUE)
