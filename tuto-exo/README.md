@@ -1,9 +1,12 @@
----
-title: "Probabilités et statistiques pour la biologie (SBGAU14L) – tutoriels et exercices"
-author: Jacques van Helden and Andreas Zanzoni
-layout: default
----
+## Probabilités et statistiques pour la biologie (SBGAU14L) 
 
+### Auteurs
+
+- Jacques van Helden
+- Andreas Zanzoni
+
+
+### Tutoriels et exercices
 
 
 | Sujet | Tuto-exo |
