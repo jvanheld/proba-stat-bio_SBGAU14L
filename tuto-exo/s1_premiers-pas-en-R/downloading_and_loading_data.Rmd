@@ -1,33 +1,39 @@
 ---
 title: "Tuto-TP – Apprivoiser ses données"
 author: "Jacques van Helden"
-date: '`r Sys.Date()`'
+date: "`r Sys.Date()`"
 output:
   html_document:
-    self_contained: TRUE
-    fig_caption: yes
+    self_contained: true
+    fig_caption: true
     highlight: zenburn
     theme: cerulean
-    toc: yes
+    toc: true
     toc_depth: 3
-    toc_float: yes
-    code_folding: "hide"
+    toc_float: true
+    code_folding: hide
+  pdf_document:
+    toc: true
+    toc_depth: '3'
 ---
 
 ```{r settings, include=FALSE, echo=FALSE, eval=TRUE}
+#### Parameters for compiling the report with knitr ####
+## This section can be considered as a black box
 
 options(width = 300)
-# options(encoding = 'UTF-8')
+options(encoding = 'UTF-8')
 knitr::opts_chunk$set(
-  fig.width = 7, fig.height = 5, 
-  fig.path = 'figures/canale23_',
-  fig.align = "center", 
-  size = "tiny", 
-  echo = TRUE, 
-  eval = TRUE, 
-  warning = FALSE, 
-  message = FALSE, 
-  results = TRUE, 
+  fig.width = 7,                  # default width for the figures generated in R chunks
+  fig.height = 5,                 # default height for the figures generated in R chunks
+  fig.path = 'figures/canale23_', # folder and prefix for the figures generated in R chunks
+  fig.align = "center",           # default alignment for the figures generated in R chunks
+  size = "tiny",
+  echo = TRUE,                    # echo the messages during the knit compilaiton
+  eval = TRUE,                    # by default, evalute (=run) the code in all chunks, unless otherwise speficied
+  warning = FALSE,                # include R warnings in the knit document
+  message = FALSE,                # include messages in the knit document
+  results = TRUE,                 # include the results (e.f. of print() calls) in the knit document 
   comment = "")
 
 options(scipen = 12) ## Max number of digits for non-scientific notation
@@ -39,20 +45,31 @@ options(scipen = 12) ## Max number of digits for non-scientific notation
 
 ## Downloading datasets from the server
 
+
+
 ```{r data_download}
+
+## This  chunk of code below automatically performs the following operations
+## 1. Define the working directory, check if it exists and if not create it
+## 2. Define the data directory, check if it exists and if not create it
+## 3. Download the proteomics data (quantification table) 
+##    and metadata (protein names, sample groups) in the data directory. 
+##    If the files are already present, the download is skipped. 
 
 ## Working dir 
 working_dir <- "~/proba_stat_bio_TP/canale_2023"
+dir.create(working_dir, recursive = TRUE, showWarnings = FALSE)
 setwd(working_dir)
-
-data_dir <- file.path(working_dir, "data")
+message("Workgin directory: ", working_dir)
 
 #### Check data dieectory and create it if necessary ####
+data_dir <- file.path(working_dir, "data")
 dir.create(data_dir, recursive = TRUE, showWarnings = FALSE)
+message("Data directory: ", data_dir)
 
 
 ## Define file names
-files <- c("canale_2023_protein-names.tsv", 
+files <- c("canale_2023_protein_log2-LFQ.tsv", 
            "canale_2023_protein-names.tsv", 
            "sample_groups.tsv")
 
@@ -76,7 +93,14 @@ for (f in files) {
 
 ```
 
+| | |
+|-----------------------|----------------------------------------------------|
+| Working directory: | `r working_dir` |
+| Data directory: | `r data_dir` |
+| Files present in the data directory | `r list.files(data_dir)` |
+
 ## Data loading
+
 
 
 ```{r data_loading}
@@ -99,6 +123,15 @@ sample_groups = read.delim(
 ## Load the protein names from a separate table
 protein_names = read.delim(file = file.path(data_dir, "canale_2023_protein-names.tsv"), sep = "\t")
 ```
+
+We loaded the data and metadata files in the following variables. 
+
+| Variable | Rows | Columns | Content | 
+|-------------|-----|------|------------------------------------|
+| `log2_LFQ` | `r nrow(log2_LFQ)` | `r ncol(log2_LFQ)` | Protein quantification table, in log2(LFQ), where LFQ stands for label-free quantification. One row per protein, one column per sample |
+| `protein_names` | `r nrow(protein_names)` | `r ncol(protein_names)` | Protein identifiers, protein names and gene names. One row per protein |
+| `sample_groups` | `r nrow(sample_groups)` | `r ncol(sample_groups)` | One row per sample, two columns inidicating its group and its patient identifier (number) |
+
 
 ## Distribution of the data values
 
