@@ -20,3 +20,4 @@ Supports du cours "Probabilités et statistiques pour la biologie" (SBGAU14L) en
 |--------------------------|-------------------------|
 | Diaporamas | [slides](slides/README.md) |
 | Travaux pratiques | [tuto-exo](tuto-exo/README.md) |
+| Données pour les exercices  | [slides](data/README.md) |
