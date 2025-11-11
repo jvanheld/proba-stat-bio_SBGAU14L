@@ -37,3 +37,7 @@ nav:
 github:
   is_project_page: true
   repository_url: https://github.com/jvanheld/proba-stat-bio_SBGAU14L
+
+# --- do not render the files in the practicals folder, to avoid supressing the yaml header of the Rmd files ---
+exclude:
+  - tuto-exo/
