@@ -60,7 +60,7 @@ options(scipen = 12) ## Max number of digits for non-scientific notation
 working_dir <- "~/proba_stat_bio_TP/canale_2023"
 dir.create(working_dir, recursive = TRUE, showWarnings = FALSE)
 setwd(working_dir)
-message("Workgin directory: ", working_dir)
+message("Working directory: ", working_dir)
 
 #### Check data dieectory and create it if necessary ####
 data_dir <- file.path(working_dir, "data")
@@ -136,6 +136,14 @@ We loaded the data and metadata files in the following variables.
 ## Distribution of the data values
 
 ### Histogram
+
+```{r hist_log2_LFQ_altogether}
+#### Generate a histogram with the log2(LFQ) values of all the samples together ####
+
+hist(unlist(log2_LFQ))
+
+```
+
 
 ### Box plot
 
