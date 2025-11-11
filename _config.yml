@@ -3,19 +3,25 @@ plugins:
   - jekyll-remote-theme
 
 title: "Probabilités et statistiques pour la biologie"
+
+authors:
+  - name: "Andreas Zanzoni"
+    orcid: "0000-0002-4818-6161"
+  - name: "Jacques van Helden"
+    orcid: "0000-0002-8799-8584"
+  - name: "Lou Bergogne"
+    orcid: "0009-0004-9409-0154"
+
+
 description: >
   Support du cours "Probabilités et statistiques pour la biologie" (SBGAU14L), Aix-Marseille Université.  
-  Ressources :
-  - 💻 [Dépôt GitHub](https://github.com/jvanheld/proba-stat-bio_SBGAU14L/)
-  - ⬇️ [Télécharger ZIP](https://github.com/jvanheld/proba-stat-bio_SBGAU14L/archive/refs/heads/main.zip)
-  - 📦 [Télécharger TAR](https://github.com/jvanheld/proba-stat-bio_SBGAU14L/archive/refs/heads/main.tar.gz)
 
 baseurl: "/proba-stat-bio_SBGAU14L"
 url: "https://jvanheld.github.io"
 
 # --- Personnalisation du thème ---
 show_downloads: true
-logo: /img/logo_amu.png
+logo: /img/logo_amu_small.png
 
 # --- Navigation (liens du menu) ---
 nav:
@@ -25,3 +31,9 @@ nav:
     link: /slides
   - name: "Travaux pratiques"
     link: /tuto-exo/
+
+
+# --- Options facultatives ---
+github:
+  is_project_page: true
+  repository_url: https://github.com/jvanheld/proba-stat-bio_SBGAU14L
