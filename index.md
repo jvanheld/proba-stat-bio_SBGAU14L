@@ -1,3 +1,9 @@
+---
+title: "Probabilités et statistiques pour la biologie (SBGAU14L)"
+author: Jacques van Helden
+layout: default
+---
+
 # Probabilités et statistiques pour la biologie (SBGAU14L)
 
 Supports du cours "Probabilités et statistiques pour la biologie" (SBGAU14L) enseigné en M1 immuno/BSG/bioinformatique d'Aix-Marseille Université
@@ -15,5 +21,6 @@ Supports du cours "Probabilités et statistiques pour la biologie" (SBGAU14L) en
 | Sujet | Tuto-exo |
 |--------------------------------|----------|
 | Premiers pas avec R            |   |
-| Apprivoiser les données : statistiques descriptives et exploratoires      | [data-exploration.Rmd](tuto-exo/s1_statistiques-descriptives/data-exploration.Rmd) |
-| Des populations aux échantillons et retour : échantillonnage et estimation  | [sampling.Rmd](tuto-exo/s2_echantillonnage-et-estimation/sampling.Rmd) |
+| **Trame de rapport R markdown** pour télécharger et charger les données | [downloading_and_loading_data.Rmd](tuto-exo/s2_statistiques-descriptives/downloading_and_loading_data.Rmd) |
+| Apprivoiser les données : statistiques descriptives et exploratoires      | [data-exploration.Rmd](tuto-exo/s2_statistiques-descriptives/data-exploration.Rmd) |
+| Des populations aux échantillons et retour : échantillonnage et estimation  | [sampling.Rmd](tuto-exo/s3_echantillonnage-et-estimation/sampling.Rmd) |
