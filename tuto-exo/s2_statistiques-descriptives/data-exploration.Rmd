@@ -108,7 +108,7 @@ options(scipen = 12) ## Max number of digits for non-scientific notation
 | Q2 | Second quartile = median |
 | Q3 | Third quartile |
 
-## Study caase
+## Study case
 
 Canale (2023) ... (summary TO BE WRITTEN)
 
@@ -141,21 +141,64 @@ list.files()
 
 ```
 
-### Downloading the data file
+### Downloading datasets from the server
 
-TO BE WRITTEN
+
 
 ```{r data_download}
-#### Data directory ####
-dir_data = file.path(wd, "data")
-dir.create(dir_data, showWarnings = FALSE, recursive = TRUE)
+
+## This  chunk of code below automatically performs the following operations
+## 1. Define the working directory, check if it exists and if not create it
+## 2. Define the data directory, check if it exists and if not create it
+## 3. Download the proteomics data (quantification table) 
+##    and metadata (protein names, sample groups) in the data directory. 
+##    If the files are already present, the download is skipped. 
+
+## Working dir 
+working_dir <- "~/proba_stat_bio_TP/canale_2023"
+dir.create(working_dir, recursive = TRUE, showWarnings = FALSE)
+setwd(working_dir)
+message("Working directory: ", working_dir)
+
+#### Check data dieectory and create it if necessary ####
+data_dir <- file.path(working_dir, "data")
+dir.create(data_dir, recursive = TRUE, showWarnings = FALSE)
+message("Data directory: ", data_dir)
 
 
-list.files(dir_data)
+## Define file names
+files <- c("canale_2023_protein_log2-LFQ.tsv", 
+           "canale_2023_protein-names.tsv", 
+           "sample_groups.tsv")
+
+## Download the data from github to the local data dir
+repo_base <- "https://raw.githubusercontent.com/jvanheld/proba-stat-bio_SBGAU14L/refs/heads/main/data/canale_2023/"
+
+
+for (f in files) {
+  ## Define the destination path (data dir + file name)
+  dest_file <- file.path(data_dir, f)
+  
+  ## Check if the file is already there, and if so skip, else download it
+  if (file.exists(dest_file)) {
+    message("File ", f, " already here, skipping the download")
+  } else {
+    source_url <- file.path(repo_base, f)
+    message("Downloading file ", f, " from github")
+    download.file(source_url, dest_file, quiet = FALSE)
+  }
+}
+
 ```
 
+| | |
+|-----------------------|----------------------------------------------------|
+| Working directory: | `r working_dir` |
+| Data directory: | `r data_dir` |
+| Files present in the data directory | `r list.files(data_dir)` |
 
-## Loading the data files
+### Data loading
+
 
 We will load 3 data files, that will be used at different stages of our analysis. 
 These files are provided as text files, with columns separated by tabulations (the so-called "tab-separated values" format, with extension `.tsv`).
@@ -164,38 +207,210 @@ These files are provided as text files, with columns separated by tabulations (t
 |------------------------------|-------------------------------------------|
 | `canale_2023_protein_log2-LFQ.tsv` | The proteomics quantification table, with one row per protein, and one column per sample. Note that the first column provides protein IDs, and the first row sample IDs |
 | `canale_2023_protein-names.tsv` | One row per protein, and columns with the protein IDs, protein names and gene names. Note that a protein can have one or more IDs (allocated by different databases), and zero, one or more protein or gene names (some proteins/genes of unknown function have no name, ans some proteins/genes can have several synonyms). |
-| `sample_groups.tsv` | A 2-columns tab-separated files indicating the group to which each sample belongs. In this study case, there are only two groups : **HCC** for Human cancer cells, and **Liver** for liver cells.  |
+| `sample_groups.tsv` | A 3-columns tab-separated files containing one row per sample ID (first column, used as row names), and its decomposition in two fields indicating the group to which each sample belongs, and the patient ID (number). In this study case, there are only two groups : **HCC** for Human cancer cells, and **Liver** for liver cells.
 
-```{r load_data}
+```{r data_loading}
+message("Loading the datasets")
+
 #### Load the data file ####
-log2_LFQ = read.delim(file = file.path(dir_data, "canale_2023_protein_log2-LFQ.tsv"), 
-                      sep="\t", 
-                      header=TRUE, 
-                      row.names=1)
-# View(log2_LFQ) ## Just for checking, but disactivated to avoid blocking the execution
+log2_LFQ = read.delim(
+  file = file.path(data_dir, "canale_2023_protein_log2-LFQ.tsv"), 
+  sep="\t", 
+  header=TRUE, 
+  row.names=1)
 
 ## Load a separate table indicating which sample belongs to which group (cancer or liver cells)
-sample_groups = read.delim(file.path(dir_data, "sample_groups.tsv"), sep="\t", header=TRUE, row.names=1)
+sample_groups = read.delim(
+  file.path(data_dir, "sample_groups.tsv"), 
+  sep="\t", 
+  header=TRUE, 
+  row.names=1)
 
 ## Load the protein names from a separate table
-protein_names = read.delim(file = file.path(dir_data, "canale_2023_protein-names.tsv"), sep = "\t")
+protein_names = read.delim(file = file.path(data_dir, "canale_2023_protein-names.tsv"), sep = "\t")
+```
+
+The data and metadata files have been loaded in the following R variables. 
+
+| Variable | Rows | Columns | Content | 
+|-------------|-----|------|------------------------------------|
+| `log2_LFQ` | `r nrow(log2_LFQ)` | `r ncol(log2_LFQ)` | Protein quantification table, in log2(LFQ), where LFQ stands for label-free quantification. One row per protein, one column per sample |
+| `protein_names` | `r nrow(protein_names)` | `r ncol(protein_names)` | Protein identifiers, protein names and gene names. One row per protein |
+| `sample_groups` | `r nrow(sample_groups)` | `r ncol(sample_groups)` | One row per sample, two columns inidicating its group and its patient identifier (number) |
+
+
+
+
+## Distribution of the data values
+
+### Histogram
+
+***Exercice :** lisez la documentation de la fonction `hist()`, et améliorez l'histogramme ci-dessous en modifiant le titre, les étiquettes des axes, et les autres paramètres qui vous sembleront pertinents. *
+
+```{r hist_log2_LFQ_altogether, fig.cap="Histogram of log2(LFQ) values from Canale's whole proteomics dataset. "}
+#### Generate a histogram with the log2(LFQ) values of all the samples together ####
+
+hist(unlist(log2_LFQ))
 
 ```
 
-### Checking the loaded tables
+***Votre interprétation : ** ajoutez ici vos commentaires concernant la forme générale de cet histogramme. *
 
-```{r check_loaded}
 
-## Dimensions of the data table
-dim(log2_LFQ)
+### Box plot
 
-## Number of NA values (non-allocated)
-barplot(sort(apply(is.na(log2_LFQ), 1, sum), decreasing = TRUE))
+***Exercice : ** utilisez la fonction  R `boxplot()` pour visualiser ces données sous forme de boîtes à moustaches. Utilisez différentes options pour rendre cette figure aussi claire que possible. *
 
-## Number of rows containing not a single NA value
-dim(na.omit(log2_LFQ))
+**Astuces :**
+- il existe une option permettant d'afficher les boîtes à moustaches horizontalement, ce qui facilite la lecture des étiquettes associées à chaque échantillon
+- l'option `las=1` permet d'afficher horizontalement les étiquettes des deux axes, ce qui facilite leur lecture
+
+```{r box_plot, fig.width=8, fig.height=12, out.width="100%", fig.cap="Boxplot of Canale's data. "}
+
+# boxplot(log2_LFQ)
+
+## Define colors per sample according to the sample group
+#ifelse(test = sample_groups$group == "HCC", "violet", "yellow")
+group_colors <- c("HCC"="violet", Liver="yellow")
+sample_groups$color <- group_colors[sample_groups$group]
+
+boxplot(log2_LFQ, 
+        horizontal = TRUE, 
+        las=1, 
+        cex.axis=0.7, 
+        col=sample_groups$color, 
+        main="Box plot of proteomics data", 
+        xlab="log2(LFQ)")
+legend("bottomright", legend = names(group_colors), fill = group_colors, cex = 0.9)
 
 ```
+**Votre interprétation : ** observez la médiane et l'espace inter-quartile des échantillons. Identifiez les échantillons qui auraient une distribution différente des autres. 
+
+### Violin plot
+
+Installez la librairie `vioplot` et chargez-la dans R. 
+
+```{r violin_plot, fig.width=8, fig.height=12, out.width="100%", fig.cap="Violin plot of Canale's data. "}
+#### Draw a violin plot ####
+
+## Install vioplot library if required, and load it
+if (!require(vioplot)) {
+  install.packages("vioplot")
+}
+library(vioplot)
+
+## Install vioplot library if required, and load it
+vioplot(log2_LFQ,
+        horizontal = TRUE,
+        names = rep("", ncol(log2_LFQ)),  # supprime labels auto
+        las = 1,
+        cex.axis = 0.7,
+        col = sample_groups$color,
+        main = "Violin plot of proteomics data",
+        xlab = "log2(LFQ)")
+
+# Ajout manuel des labels sur l'axe Y
+axis(2, at = 1:ncol(log2_LFQ), labels = colnames(log2_LFQ), las = 2, cex.axis = 0.7)
+legend("bottomright", legend = names(group_colors), fill = group_colors, cex = 0.9)
+
+```
+
+
+### Heat map
+
+## Protein filtering
+
+The histogram below indicates the number of NA values per protein. 
+
+
+```{r na_per_protein, fig.width=8, fig.height=5, out.width="90%", fig.cap="Number of NA values per protein. The color scale highlighhts the caution to be taken for proteins with high number of NA values. "}
+#### Treat the number  of NA values per sample ####
+
+## Count the number of NA values per protein (row)
+na_per_protein <- apply(is.na(log2_LFQ), 1, sum)
+
+## Generate a color palette from pink to green
+col_fun <- colorRampPalette(c("lightgreen", "red"))
+n_breaks <- ncol(log2_LFQ) + 1  # nb d’intervalles = nb breaks + 1
+
+## Draw a histogram with the number of NA values per sample
+hist(na_per_protein - 0.5, 
+     breaks = -1:ncol(log2_LFQ),
+     las = 1,
+     main = "Number of NA values per protein",
+     xlab = "Number of NA values",
+     ylab = "Number of proteins",
+     col = col_fun(n_breaks),
+     border = "grey")
+
+```
+
+**Observations: **
+
+- The histogram spreads over all values from `r min(na_per_protein)` to `r max(na_per_protein)` NA values per protein.
+- `r na_per_protein[ncol(log2_LFQ)]` proteins have NA values in all the samples (columns)
+- The number of proteins with measurements in all the colums is a minority : only `r na_per_protein[0]` proteins have not a single NA value
+
+
+We suppress the rows (proteins) containing too many NA values. 
+
+
+```{r protein_filtering}
+#### 
+## Create a clean data.frame by suppressing the lines (proteins) containing only NA values
+min_values_per_prot <- 5
+log2_LFQ_clean <- log2_LFQ[na_per_protein >= min_values_per_prot, ]
+nrow(log2_LFQ_clean)
+
+```
+
+For this, we arbitrarily set a threshold with the minimal number of values per protein: we suppress all the proteins (rows) having less than  `r min_values_per_prot` NA values. Among the `r nrow(log2_LFQ)` proteins of the initial table, the filtered keeps  `r nrow(log2_LFQ_clean)`. 
+
+
+
+### Principal components
+
+```{r eval=FALSE}
+
+if (!requireNamespace("BiocManager", quietly = TRUE)) {
+  install.packages("BiocManager") 
+}
+BiocManager::install("pcaMethods")
+
+library(pcaMethods)
+
+
+
+## Compute principal components from samples (columns by transposing the data table)
+pca_samples <- pca(t(log2_LFQ_clean), method = "nipals", nPcs = 5, scale = "uv")
+
+## Compute PC scores for each protein
+scores <- scores(res_pca)
+dim(scores)
+plot(scores[,1], scores[,2],
+     xlab = "PC1", ylab = "PC2",
+     main = "ACP avec NIPALS (valeurs manquantes gérées)",
+     pch = 19)
+
+
+## Compute principal components from proteins (rows)
+res_pca <- pca(log2_LFQ_clean, method = "nipals", nPcs = 5, scale = "uv")
+
+## Compute PC scores for each protein
+scores <- scores(res_pca)
+dim(scores)
+plot(scores[,1], scores[,2],
+     xlab = "PC1", ylab = "PC2",
+     main = "ACP avec NIPALS (valeurs manquantes gérées)",
+     pch = 19)
+```
+
+
+
+## Descriptive statistics
+
+
+## Standardizing the data table
 
 
 ## Descriptive statistics
