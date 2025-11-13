@@ -239,7 +239,7 @@ hist(x)
 ```
 
 
-```{r hist_log2_LFQ_altogether_pretty, fig.width=7, fig.height=4.5, out.width="100%", fig.cap="Histogram of log2(LFQ) values from Canale's whole proteomics dataset. "}
+```{r hist_log2_LFQ_altogether_pretty, fig.width=8, fig.height=5, out.width="100%", fig.cap="Histogram of log2(LFQ) values from Canale's whole proteomics dataset. "}
 ## Create a vector with all the numeric values of the proteome quantification
 x <- na.omit(unlist(log2_LFQ))
 
@@ -250,8 +250,7 @@ hist(x,
      ylab = "Occurrences", ## Label on the Y axis
      breaks=100, ## Increase the number of breaks to better evaluate the shape of the distribution
      las = 1,   ## Display axis labels horizontally
-     col = "lightblue"
-     )
+     col = "lightblue")
 grid() ## Add a discrete grid to mark the X and Y levels
 
 ```
@@ -336,9 +335,17 @@ kable(unlist(proteome_parameters), col.names = "values", caption = "Descriptive 
 - deux barres verticales marquant le premier et le troisième quartile
 - une flèche marquant l'espace interquartile*
 
-```{r hist_with_parameters, fig.width=7, fig.height=4.5, out.width="80%", fig.cap="Histogramme des valeurs de protéome avec les paramètres de tendance centrale et de dispersion"}
+```{r hist_with_parameters, fig.width=8, fig.height=5, out.width="80%", fig.cap="Histogramme des valeurs de protéome avec les paramètres de tendance centrale et de dispersion"}
+x <- na.omit(unlist(log2_LFQ))
+
 ### Draw a histogram ###
-hist(x, breaks = 100, main = "Distribution of proteome quantification values", xlab="log2_LFQ", ylab="Frequency", col="lightblue", las=1)
+hist(x, breaks = 100, 
+     main = "Distribution of proteome quantification values", 
+     xlab="log2_LFQ", 
+     ylab="Frequency", 
+     col="lightblue",
+     border = "white",
+     las=1)
 
 ## Mark the mean
 abline(v = proteome_parameters$mean, col = "blue", lwd = 3)
@@ -356,23 +363,58 @@ arrows(x0 = proteome_parameters$mean - proteome_parameters$sd, ## Left limit of 
        )
 
 ## Mark the median
-abline(v = proteome_parameters$median, col = "darkgreen", lwd = 5, lty = "dotted")
+abline(v = proteome_parameters$median, 
+       col = "darkgreen", 
+       lwd = 5)
 
-## Mark the first quartile
-###  ADD YOUR CODE HERE ###
+## Mark the quartiles
+abline(v = proteome_parameters$Q1, col = "brown", lwd = 2)
+abline(v = proteome_parameters$Q3, col = "brown", lwd = 2)
 
-## Mark the third quartile
-###  ADD YOUR CODE HERE ###
 
 ## Mark the interquartile range
-###  ADD YOUR CODE HERE ###
+arrows(x0 = proteome_parameters$Q1, ## First quartile
+       x1 = proteome_parameters$Q3, ## Third quartile
+       y0 = 4500, ## Height of the arrow
+       y1 = 4500, ## Height of the arrow
+       lwd = 5, ## Line width
+       code = 3,  ## Draw arrowheads on both sides of the arrow
+       length = 0.1, ## Length of the arrowheads relative to the arrow
+       angle=30,   ## Angle of the arrowheads
+       col = "brown")
 
 ## Add a legend on the graph
 legend("topright",  ## Position of the legend
-       legend = c("mean", "mean ± sd"),  ## text of the legend
-       col = c("blue", "darkviolet"), lwd=3, ## Colors of the legent elements
+       legend = c("mean", 
+                  "mean ± sd",
+                  "IQR",
+                  "Q1",
+                  "median",
+                  "Q3"),  ## text of the legend
+       col = c("blue", 
+               "darkviolet",
+               "darkgreen",
+               "brown",
+               "brown",
+               "brown"
+               ), ## Colors of the legend elements
+       lwd=c(3, 3, 5, 2, 5, 2), 
        bty="n") ## no border around the legend
 
+
+## Add a legent with the numeric values
+legend("topleft",
+       legend = c(
+         paste0("mean=", round(proteome_parameters$mean, 2)),
+         paste0("Q1=", round(proteome_parameters$Q1, 2)),
+         paste0("median=", round(proteome_parameters$median, 2)),
+         paste0("Q3=", round(proteome_parameters$Q3, 2)),
+         paste0("sd=", round(proteome_parameters$sd, 2)),
+         paste0("IQR=", round(proteome_parameters$IQR, 2)),
+         paste0("g1=", round(proteome_parameters$g1, 2)),
+         paste0("g2=", round(proteome_parameters$g2, 2))
+         ),
+       bty="n")
 
 ```
 
