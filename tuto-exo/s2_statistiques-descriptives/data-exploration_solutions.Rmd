@@ -76,6 +76,7 @@ editor_options:
 
 
 ```{r settings, include=FALSE, echo=FALSE, eval=TRUE}
+library(knitr)
 
 options(width = 300)
 # options(encoding = 'UTF-8')
@@ -117,32 +118,12 @@ Canale (2023) ... (summary TO BE WRITTEN)
 In this section, we will 
 
 - create a working directory for this tutorial
-- download the data file from the web in this directory
-- load it in R
-- check the content of this file
+- download a data file and 2 metadata files from the web
+- load these three files in R, in `data.frame` structures
+- check the content of these data frames
 
-### Creating your working directory
 
-On your computer, create a folder for this practical. For this tutorial, we will assume that this folder is named `canale23_analysis`  and is located at the root of your home directory. 
-
-The code hereafter will create this directory for you. 
-
-```{r workdir}
-#### Working directory ####
-
-# Define the path of the working directory
-wd = "~/proba_stat_bio_TP/canale_2023"
-
-# Create the working directory
-dir.create(wd, showWarnings = FALSE, recursive = TRUE)
-
-setwd(wd)
-list.files()
-
-```
-
-### Downloading datasets from the server
-
+### Downloading datasets from the github repository
 
 
 ```{r data_download}
@@ -190,6 +171,7 @@ for (f in files) {
 }
 
 ```
+
 
 | | |
 |-----------------------|----------------------------------------------------|
@@ -240,22 +222,223 @@ The data and metadata files have been loaded in the following R variables.
 
 
 
-
-## Distribution of the data values
+## Exploration of the data values
 
 ### Histogram
 
-***Exercice :** lisez la documentation de la fonction `hist()`, et améliorez l'histogramme ci-dessous en modifiant le titre, les étiquettes des axes, et les autres paramètres qui vous sembleront pertinents. *
 
-```{r hist_log2_LFQ_altogether, fig.cap="Histogram of log2(LFQ) values from Canale's whole proteomics dataset. "}
+***Exercice :** Nous avons généré ci-dessous un histogramme de base pour représener la distribution de toutes les valeurs quantitatives du protéome, après avoir écarté les valeurs manquantes (*NA*). Lisez la documentation de la fonction `hist()`, et améliorez l'histogramme en modifiant le titre, les étiquettes des axes, et les autres paramètres qui vous sembleront pertinents. *
+
+```{r hist_log2_LFQ_altogether, fig.width=7, fig.height=4.5, out.width="100%", fig.cap="Histogram of log2(LFQ) values from Canale's whole proteomics dataset. "}
+## Create a vector with all the numeric values of the proteome quantification
+x <- na.omit(unlist(log2_LFQ))
+
 #### Generate a histogram with the log2(LFQ) values of all the samples together ####
+hist(x)
 
-hist(unlist(log2_LFQ))
+```
+
+
+```{r hist_log2_LFQ_altogether_pretty, fig.width=7, fig.height=4.5, out.width="100%", fig.cap="Histogram of log2(LFQ) values from Canale's whole proteomics dataset. "}
+## Create a vector with all the numeric values of the proteome quantification
+x <- na.omit(unlist(log2_LFQ))
+
+#### Generate a histogram with the log2(LFQ) values of all the samples together ####
+hist(x, 
+     main = "Distribution of proteome quantification values", ## Title of the figure
+     xlab = "log2(LFQ)", ## Label on the X axis
+     ylab = "Occurrences", ## Label on the Y axis
+     breaks=100, ## Increase the number of breaks to better evaluate the shape of the distribution
+     las = 1,   ## Display axis labels horizontally
+     col = "lightblue"
+     )
+grid() ## Add a discrete grid to mark the X and Y levels
 
 ```
 
 ***Votre interprétation : ** ajoutez ici vos commentaires concernant la forme générale de cet histogramme. *
 
+**Observations: **
+
+- The distribution is asymmetric, with a right-side skew (longer tail on the right than on the left)
+- The distribution is roughly unimodal (a single peak), but we see a "shoulder" between X values 27 and 30
+- Actually,  we don't expect *a priori* that this curve would follow a normal distribution, or any particular distribution, because it represents values for >8000 proteins, each of which is expected to have a specific level (concentration) related to transcriptional and post-transcriptional regulation
+
+
+
+### Réduction des données
+
+Le tableau en annexe 1 récapitule les principales statistiques utilisées pour caractériser les propriétés d'un jeu de données qsuantitatives. 
+
+**Note :** les paramètres ci-dessous portent uniquement sur les observations dont nous disposons. Des formules légèrement différentes seront utilisées dans le chapitre **"Echantillonnage et estimation"** pour estimer les paramètres d'une population à partir d'un échantillon. 
+
+
+**Exercice** : Calculez les paramètres suivants sur l'ensemble des données du tableau de quantification du protéome. Stockez les paramètres dans une liste nommée `proteome_parameters`, en associant les étiquettes suivantes aux paramètres. 
+
+- `mean`: moyenne
+- `var` :variance
+- `sd`: écart-type (standard deviation)
+- `Q1`: premier quartile
+- `min` : minimum
+- `median` : médiane
+- `Q3` : troisième quartile
+- `max` : maximum
+- `IQR`: Ecart interquartile
+
+Astuce : pour vous faciliter la tâche, nous avons initié la liste de paramètres avec les 3 premières statistiques, à vous de la compléter.
+
+Note: nous avons calculé pour vous les paramètres $g_1$ ry $g_2$, pour lequel il n'existe pas de fonction prédéfinie dans R.  
+
+```{r proteome_parameters}
+## Compute a vector with the non-NA values of the proteome quantification
+x <- na.omit(unlist(log2_LFQ))
+
+## Compute descriptive statistics with the all the numeric values of the proteome
+proteome_parameters <- list()
+
+proteome_parameters$mean <- mean(x)
+proteome_parameters$var <- var(x)
+proteome_parameters$sd <- sd(x)
+proteome_parameters$min <- min(x)
+proteome_parameters$P05 <- unname(quantile(x, 0.05)) ## Percentile 05. I add unname() to avoid automatic inclusion of the percents in the variable name
+proteome_parameters$Q1 <- unname(quantile(x, 0.25))
+proteome_parameters$median <- median(x)
+proteome_parameters$Q3 <- unname(quantile(x, 0.75))
+proteome_parameters$P95 <- unname(quantile(x, 0.95)) ## Percentile 95
+proteome_parameters$max <- max(x, 0.75)
+proteome_parameters$IQR <- IQR(x, 0.75)
+
+
+## Skewness : we use moments::skewness() to get the Pearson's parameter b1, and we compute manually Fisher's parameter g2, which is equivalent
+if (!require("moments")) {
+  install.packages("moments")
+}
+library(moments)
+proteome_parameters$b1 <- skewness(x)
+
+proteome_parameters$g1 <- mean((x - proteome_parameters$mean)^3) / proteome_parameters$sd^3
+
+## Kurtosis : we use moments::kurtosis() to compute Pearson's parameter b2, and we compute manually Pearson's standardized g2 parameter, which equals b2 -3
+## (the Normal distribution is characterized by b1=3 and thus g2=0, more readable)
+proteome_parameters$b2 <- kurtosis(x)
+proteome_parameters$g2 <- (mean((x - proteome_parameters$mean)^4) / proteome_parameters$sd^4) - 3
+
+## Print a nicely formatted table in the report generated by knit. 
+## For this we use the function kable() from the knit package
+kable(unlist(proteome_parameters), col.names = "values", caption = "Descriptive statistics computed on all the non-NA proteome values")
+
+```
+
+
+**Exercice:** Nous avons retracé l'histogramme des valeurs de quantification, en utilisant les fonctions `ablines()` pour marquer la moyenne, et `arrows()` pour dessiner un intervalle couvrant 1 écart-type de chaque côté de la moyenne. Lisez l'aide des fonctions `abline` et `arrows` en faisant le lien entre les arguments utilisés et le résultat graphique. Ajouter ensuite les instructions pour dessiner également : 
+
+- une barre verticale marquant la médiane
+- deux barres verticales marquant le premier et le troisième quartile
+- une flèche marquant l'espace interquartile*
+
+```{r hist_with_parameters, fig.width=7, fig.height=4.5, out.width="80%", fig.cap="Histogramme des valeurs de protéome avec les paramètres de tendance centrale et de dispersion"}
+### Draw a histogram ###
+hist(x, breaks = 100, main = "Distribution of proteome quantification values", xlab="log2_LFQ", ylab="Frequency", col="lightblue", las=1)
+
+## Mark the mean
+abline(v = proteome_parameters$mean, col = "blue", lwd = 3)
+
+## Mark a range extending over 1 standard deviation on each side of the mean
+arrows(x0 = proteome_parameters$mean - proteome_parameters$sd, ## Left limit of the arrow
+       x1 = proteome_parameters$mean + proteome_parameters$sd, ## Right limit of the arrow
+       y0 = 4000, ## Height of the arrow
+       y1 = 4000, ## Height of the arrow
+       lwd=3, ## Line width
+       code = 3,  ## Draw arrowheads on both sides of the arrow
+       length=0.1, ## Length of the arrowheads relative to the arrow
+       angle=30,   ## Angle of the arrowheads
+       col = "darkviolet"
+       )
+
+## Mark the median
+abline(v = proteome_parameters$median, col = "darkgreen", lwd = 5, lty = "dotted")
+
+## Mark the first quartile
+###  ADD YOUR CODE HERE ###
+
+## Mark the third quartile
+###  ADD YOUR CODE HERE ###
+
+## Mark the interquartile range
+###  ADD YOUR CODE HERE ###
+
+## Add a legend on the graph
+legend("topright",  ## Position of the legend
+       legend = c("mean", "mean ± sd"),  ## text of the legend
+       col = c("blue", "darkviolet"), lwd=3, ## Colors of the legent elements
+       bty="n") ## no border around the legend
+
+
+```
+
+
+### Statistiques marginales : statistiques par ligne (protéine)
+
+**Exercice :** Dans le bloc de code ci-dessous, nous avons utilisé la fonction `apply()` pour  calculer la moyenne de chaque protéine, et nous avons stocké le résultat dans un vecteur nommé `mean_per_protein`. Notez que nous avons ajouté l'option `na.rm = TRUE`, que la fonction `apply()` transmet à la fonction `mean()`. 
+
+- Dessinez un histogramme avec la distribution des moyennes par protéines
+- Calculez l'écart-type de chaque protéine et stockez le résultat dans un vecteur nommé `sd_per_protein` 
+- Dessinez un histogramme avec la distribution des écarts-types par protéines
+- Au moyen de la fonction R `plot()`, dessinez un nuage de points (scatter plot) avec en abcsisse la moyenne par protéine et en ordonnée l'écart-type par protéine
+
+
+```{r hist_mean_per_protein}
+#### Compute marginal statistics per line (protein) ####
+
+## Mean per protein
+mean_per_protein <- apply(log2_LFQ, 1, mean, na.rm = TRUE)
+
+
+## Histogram of the means per protein
+
+### A VOUS DE JOUER ###
+
+```
+
+```{r hist_sd_per_protein}
+## Standard deviation per protein
+
+### A VOUS DE JOUER ###
+
+
+
+## Histogram of the sd per protein
+
+### A VOUS DE JOUER ###
+
+
+## Dot plot with the 
+
+### A VOUS DE JOUER ###
+
+
+```
+
+```{r hist_protein_mean_vs_sd, fig.width=7, fig.height=7, out.width="100%", fig.cap="Mean versus standard deviation per protein. "}
+
+### A VOUS DE JOUER ###
+
+```
+
+
+### Statistiques marginales : statistiques par colonne (échantillon)
+
+**Exercice :**
+
+- utilisez la fonction `apply()` pour calculer la moyenne par colonne (échantillon), et stockez le résultat dans un vecteur nommé `mean_per_protein`
+- utilisez la fonction `barplot()` pour visualiser les moyennes
+
+```{r barplot_mean_per_sample}
+
+
+### A VOUS DE JOUER ###
+
+```
 
 ### Box plot
 
@@ -317,6 +500,7 @@ legend("bottomright", legend = names(group_colors), fill = group_colors, cex = 0
 
 
 ### Heat map
+
 
 ## Protein filtering
 
@@ -535,3 +719,23 @@ heatmap(as.matrix(protein_stand), Rowv = NA, Colv=NA,
 
 
 ```
+
+## Appendices
+
+### Appendix 1: descriptive statistics : sample parameters
+
+| Statistique |  Description | Formule |
+|-----------------------|---------------------------|------------------------------------|
+| Moment  | Moment d'ordre $k$ par rapport à une constante $c$  | $\frac{1}{n} \sum_{i=1}^{n} (x_i - c)^k$ |
+| Moment  | Moment d'ordre $k$ par rapport à l'origine  | $a_k = \frac{1}{n} \sum_{i=1}^{n} x_i^k$ |
+| Moyenne d'échantillon (sample mean) | Tendance centrale | $\bar{x} = a_1 = \frac{1}{n} \sum_{i=1}^{n} x_i$ |
+| Moment centré | Moment d'ordre $k$ par rapport à la moyenne  | $m_k = \frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^k$ |
+| Variance d'échantillon (sample variance) | Dispersion | $s^2 = m_2 = \frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^2$ |
+| Ecart-type d'échantillon (sample standard deviation) | Dispersion | $s = \sqrt{s^2} = \sqrt{ \frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^2 }$ |
+| Skewness | Dissymétrie | $g_1 = m_3 / s^3 = \frac{ \frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^3 }{ \left( \sqrt{ \frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^2 } \right)^3 }$ |
+| Kurtosis = peakedness | Coefficient d'acuité (d'aplatissement, de voussure) | $g_2 = m_4 / s^4 - 3 = \frac{ \frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^4 }{ \left( \frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^2 \right)^2 }$ |
+| Quantile | Valeur minimale qui "plafonne" (supérieure ou égale à) une certaine proportion $p$ des $n$ observations | $Q(p) = x_{(\lceil n p \rceil)}, p \in [0,1]$ |
+| Premier quartile |   | $Q_1 = Q(0.25)$ |
+| Médiane (médiane) | Tendance centrale (robuste aux valeurs aberrantes) | $\tilde{x} = Q_2 = Q(0.5)$ |
+| Troisième quartile |   | $Q_3 = Q(0.75)$ |
+| Ecart interquartile | Dispersion (robuste aux valeurs aberrantes) | $\text{IQR} = Q_3 - Q_1$ |
