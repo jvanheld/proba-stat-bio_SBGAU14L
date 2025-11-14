@@ -1,9 +1,9 @@
 ---
 title: "Tuto/exo: tirage de nombres d'une distribution de probabilité"
 output:
-  html_notebook:
+  html_document:
     code_folding: show
-    collapsed: no
+    collapsed: yes
     fig_caption: yes
     highlight: zenburn
     theme: cerulean
@@ -15,9 +15,9 @@ output:
     highlight: zenburn
     toc: yes
     toc_depth: 3
-  html_document:
+  html_notebook:
     code_folding: show
-    collapsed: yes
+    collapsed: no
     fig_caption: yes
     highlight: zenburn
     theme: cerulean
@@ -25,7 +25,7 @@ output:
     toc_depth: 3
     toc_float: yes
 editor_options:
-  chunk_output_type: inline
+  chunk_output_type: console
 ---
 
 ## Tutoriel
@@ -36,10 +36,10 @@ Dans ce tuto, nous illustrons quelques concepts de base de l'échantillonnage st
 
 ```{r normal_sample}
 # Generate 100,000 numbers from a normal distribution with mean=0 and standard deviation=1
-numbers <- rnorm(n = 100000, mean = 0, sd = 1)
+x <- rnorm(n = 100000, mean = 0, sd = 1)
 
 # Plot a histogram of the generated numbers
-hist(numbers, main="Distribution of 100,000 random numbers from a normal distribution", xlab="Value")
+hist(x, main="Distribution of 100,000 random numbers from a normal distribution", xlab="Value")
 ```
 
 ### Séparation entre paramètres et exécution
@@ -60,10 +60,10 @@ m <- 50     # Mean of the normal distribution
 s <- 5      # Standard deviation of the normal distribution
 
 # Sample n numbers in a normal population of mean m and standard deviation s
-numbers <- rnorm(n = n, mean = m, sd = s)
+x <- rnorm(n = n, mean = m, sd = s)
 
 # Plot a histogram of the generated numbers
-hist(numbers, 
+hist(x, 
      main=paste0("Sampling from a normal distribution",
                  "(n=", format(n, scientific = FALSE),
                  ", m=", m,
@@ -82,15 +82,84 @@ hist(numbers,
     - choisissez un e couleur qui vous plaît pour le corps et les contours de l'histogramme
     - adaptez les options pour afficher les valeurs numériques horizontalement sur l'axe Y (et sur l'axe X)
 
+```{r normal_sample_param_pretty}
+
+# Plot a histogram of the generated numbers
+hist(x, 
+     breaks = 100,
+     col="skyblue",
+     border = "white",
+     las = 1,
+     main=paste0("Sampling from a normal distribution",
+                 "(n=", format(n, scientific = FALSE),
+                 ", m=", m,
+                 ", s=", s,
+                 ")"))
+
+```
+
+
 
 2. Ajoutez des blocs de code pour des tirages de même taille dans les distributions suivantes
 
-    - uniforme
+    - uniforme allant de -5 à +5
     - chi2
     - Poisson
-    
+
+```{r normal_sample_runif}
+
+# Plot a histogram of the generated numbers
+n <- 100000
+x <- runif(n = n, min = -5, max = +5)
+hist(x, 
+     breaks = 100,
+     col="skyblue",
+     border = "white",
+     las = 1,
+     main=paste0("Sampling from a normal distribution",
+                 "(n=", format(n, scientific = FALSE),
+                 ", m=", m,
+                 ", s=", s,
+                 ")"))
+
+```
+
+
+
 Pour chaque distribution, jouez sur les paramètres pour évaluer leur impact sur la forme de la distribution. 
 
 Astuce : pour la distribution Poisson, utilisez des intervalles de classe séparés par des pas de 1
+
+
+## Simulation d'un grand nombre de tirages
+
+
+Nous gnénrons un tableau de 10.000 lignes et de $n$ colonnnes, en considérant quechaque ligne comme un échantillon d'une popultation donnée. Nous calculons ensuite la moyenne par ligne (`apply()`) et représntons graphiquement leur distribution (`hist()`). 
+
+
+Nous tirons des nombres dans une distribution uniforme
+
+```{r}
+r <- 100000 ## Nombre de répéttions du tirage aléatoire
+n <-16  ## Effectif de l'échantilon
+
+## Sampling : generate random numbers
+x <- runif( r * n, min = -5, max = 5)
+
+## Organize these numbers into a matrix
+x_table <- matrix(data = x, nrow = r, ncol = n)
+# dim(x_table)
+
+## Compute the mean per sample
+## Distribution d'échantillonnage de la moyenne
+sample_means <- apply(x_table, 1, mean)
+hist(sample_means, breaks = 100, xlim = c(-5, 5),
+     col="blue", border = "blue")
+abline(v=mean(x), lwd=2)
+
+```
+
+
+
 
 
