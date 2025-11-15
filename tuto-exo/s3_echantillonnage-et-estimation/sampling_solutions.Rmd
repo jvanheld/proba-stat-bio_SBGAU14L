@@ -1,0 +1,328 @@
+---
+title: "Tuto/exo: tirage de nombres d'une distribution de probabilité"
+output:
+  html_document:
+    code_folding: hide
+    collapsed: yes
+    fig_caption: yes
+    highlight: zenburn
+    theme: cerulean
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_document:
+    fig_caption: yes
+    highlight: zenburn
+    toc: yes
+    toc_depth: 3
+  html_notebook:
+    code_folding: show
+    collapsed: no
+    fig_caption: yes
+    highlight: zenburn
+    theme: cerulean
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+editor_options:
+  chunk_output_type: console
+---
+
+## Tutoriel
+
+Dans ce tuto, nous illustrons quelques concepts de base de l'échantillonnage statistique, et proposons quelques exercices pour vous familiariser avec ces concepts, et avec les fonctions R pertinentes. 
+
+
+
+```{r sampling_nomal_simple}
+# Generate 100,000 numbers from a normal distribution with mean=0 and standard deviation=1
+x <- rnorm(n = 100000, mean = 0, sd = 1)
+
+# Plot a histogram of the generated numbers
+hist(x, main="Distribution of 100,000 random numbers from a normal distribution", xlab="Value")
+```
+
+### Séparation entre paramètres et exécution
+
+Nous réécrivons ce script minimaliste en séparant les paramètres, ce qui 
+- facilite la lisibilité du code, 
+- permet d'enrichir la documentation (commenter chaque paramètre)
+- tester l'impact des paramètres sur le résultat
+
+Nous utilisons la fonction `paste0()` pour écrire le titre du graphique en y incluant la valeur numérique de ces paramètres. 
+
+Astuce : par défaut, R affiche les grands nombres en notation scientifique (ex `1e+5`). Pour éviter cela, ous remplaçons `n` par `format(n, scientific=FALSE)` dans la commande `paste0()`. 
+
+```{r sampling_normal_param}
+# Parameters
+n <- 100000 # Sample size
+m <- 50     # Mean of the normal distribution
+s <- 5      # Standard deviation of the normal distribution
+
+# Sample n numbers in a normal population of mean m and standard deviation s
+x <- rnorm(n = n, mean = m, sd = s)
+
+# Plot a histogram of the generated numbers
+hist(x)
+
+```
+
+
+
+## Exercice 1 : tirage de nombres dans une distribution aléatoire
+
+
+### Normal distribution
+
+
+1. Améliorez la présentation de l'histogramme, de la façon suivante: 
+
+    - utilisez l'option `breaks` pour réduire la largeur des intervalles de classe
+    - choisissez un e couleur qui vous plaît pour le corps et les contours de l'histogramme
+    - adaptez les options pour afficher les valeurs numériques horizontalement sur l'axe Y (et sur l'axe X)
+
+```{r sampling_normal}
+# Parameters
+n <- 100000 # Sample size
+m <- 50     # Mean of the normal distribution
+s <- 5      # Standard deviation of the normal distribution
+
+# Sample n numbers in a normal population of mean m and standard deviation s
+x <- rnorm(n = n, mean = m, sd = s)
+
+# Plot a histogram of the generated numbers
+hist(x, 
+     breaks = 100,
+     col="skyblue",
+     border = "white",
+     las = 1,
+     main=paste0("Sampling from a normal distribution",
+                 "\n", # newline character
+                 "n=", format(n, scientific = FALSE),
+                 ", m=", m,
+                 ", s=", s))
+
+
+abline(v=m, lwd=2, col="brown") ## mark the mean
+arrows(x0 = m - s, x1 = m + s, 
+       y0 = n / 100,  y1 = n/100, 
+       code = 3, length = 0.1, lwd=2, 
+       col="brown") ## Mark an interval of ± 1 standard deviation around the mean
+grid() ## Add a grid
+
+```
+
+
+
+2. Ajoutez des blocs de code pour des tirages de même taille dans les distributions suivantes
+
+    - uniforme allant de -5 à +5
+    - chi2
+    - Poisson
+    
+Pour chaque distribution, jouez sur les paramètres pour évaluer leur impact sur la forme de la distribution. 
+
+Astuce : pour la distribution Poisson, utilisez des intervalles de classe séparés par des pas de 1
+
+
+### Uniform distribution
+
+
+```{r sampling_uniform}
+
+# Plot a histogram of the generated numbers
+n <- 100000
+my_min <- -5
+my_max <- +5
+x <- runif(n = n, min = my_min, max = my_max)
+hist(x, 
+     breaks = 100,
+     col="skyblue",
+     border = "white",
+     las = 1,
+     xlim=c(my_min, my_max), # define the limits of X axis to ensure consistency
+     main=paste0("Sampling from a uniform distribution",
+                 "\n", # newline character
+                 "n=", format(n, scientific = FALSE),
+                "; min=", my_min,
+                "; max=", my_max))
+## manually add a vertical grid 
+abline(v=seq(from = my_min, 
+             to = my_max, 
+             length.out=11), 
+       col = "darkgrey") 
+abline(v=c(my_min, my_max), lwd=2, col="blue") # Mark the limits
+abline(v=(my_max + my_min)/2, lwd=2, col="brown") # Mark the mean
+
+
+```
+
+
+### Chi-squared distribution
+
+```{r sampling_chi2}
+
+# Plot a histogram of the generated numbers
+n <- 100000
+my_df <- 5
+x <- rchisq(n = n, df = my_df)
+hist(x, 
+     breaks = 100,
+     col="skyblue",
+     border = "white",
+     las = 1,
+     main=paste0("Sampling from a chi-squared distribution",
+                 "\n", # newline character
+                 "n=", format(n, scientific = FALSE),
+                ", df=", my_df))
+abline(v=my_df, lwd=2, col="brown")
+grid()
+
+```
+
+### Poisson distribution
+
+```{r sampling_poisson}
+
+# Plot a histogram of the generated numbers
+n <- 100000
+my_lambda <- 5
+x <- rpois(n = n, lambda = my_lambda)
+hist(x, 
+     breaks = -0.5:(max(x)+0.5),
+     col="skyblue",
+     border = "white",
+     las = 1,
+     main=paste0("Sampling from a Poisson distribution",
+                 "\n", # newline character
+                 "n=", format(n, scientific = FALSE),
+                ", lambda=", my_lambda))
+abline(v=my_lambda, lwd=2, col="brown")
+grid()
+
+```
+
+
+
+
+## Exercice 2 : distribution d'échantillonnage de la moyenne
+
+
+### Distribution uniforme
+
+Créez une matrice (`matrix()`) de `r=10000` lignes et `n=5` colonnes, que vous remplirez avec des nombres aléatoires tirés dans une distribution uniforme (`runif()`) entre $-5$ et $5$. 
+
+```{r sampling_means_unif}
+
+# Plot a histogram of the generated numbers
+r <- 100000     # repetitions
+n <- 5          # sample size for each repetition
+my_min <- -5    # min of the uniform distribution
+my_max <- +5    # max of the uniform distribution
+
+## Draw random numbers 
+x <- runif(n = n * r, min = -5, max = +5)
+
+## Inject the numbers in a matrix with r rows and n columns
+x_matrix <- matrix(data = x, nrow = r, ncol = n)
+
+## Compute sample means
+sample_means <- apply(X = x_matrix, MARGIN = 1, FUN = mean)
+
+## Compute some statistics about the sample means
+means_m <- mean(sample_means) # compute the mean of the sample means
+means_s <- sd(sample_means) # compute the standard deviation of the sample means
+
+## Draw a histogram
+hist(sample_means, 
+     breaks = 100,
+     col="lightgreen",
+     border = "white",
+     las = 1,
+     xlim=c(my_min, my_max), # define the limits of X axis to ensure consistency
+     main=paste0("Sampling mean from a uniform distribution",
+                 "\n", # newline character
+                 "r=", format(r, scientific = FALSE),
+                 "; n=", format(n, scientific = FALSE),
+                 "; min=", my_min,
+                 "; max=", my_max))
+
+abline(v=seq(from = my_min, 
+             to = my_max, 
+             length.out=11), 
+       col = "darkgrey") ## manually add a vertical grid 
+abline(v=c(my_min, my_max), lwd=2, col="blue") # Mark the limits
+abline(v=(my_max + my_min)/2, lwd=2, col="brown") # Mark the mean
+
+arrow_height <- r/100 # a bit tricky but suitable
+arrows(x0 = means_m - means_s, x1 = means_m + means_s, 
+       y0 = arrow_height,  y1 = arrow_height, 
+       code = 3, length = 0.1, lwd=2, 
+       col="brown") ## Mark an interval of ± 1 standard deviation around the sample mean
+
+
+```
+
+### Impact de la taille d'échantillon
+
+
+Refaites l'expérience en faisant varier la taille d'échantillon $n$, en prenant successivement les valeurs 1, 2, 4, 8, 16, 32, 64, et dessinez pour chaque valeur de $n$ un histogramme. 
+
+Pour cela, vous pouvrz utiliser une boucle `for` en R. 
+
+```{r sampling_means_unif_sample_size}
+
+# Plot a histogram of the generated numbers
+r <- 100000 # repetitions
+n <- 5
+my_min <- -5
+my_max <- +5
+m <- (my_max - my_min)/2 # Compute the mean of the uniform distribution (it is at mid-distance between the max and the min)
+
+## Iterate the experiments
+for (n in c(1, 2, 4, 8, 16, 32, 64)) {
+  
+  ## Draw random numbers 
+  x <- runif(n = n * r, min = -5, max = +5)
+  
+  ## Inject the numbers in a matrix with r rows and n columns
+  x_matrix <- matrix(data = x, nrow = r, ncol = n)
+  
+  ## Compute sample means
+  sample_means <- apply(X = x_matrix, MARGIN = 1, FUN = mean)
+  
+  ## Compute some statistics about the sample means
+  means_m <- mean(sample_means) # compute the mean of the sample means
+  means_s <- sd(sample_means) # compute the standard deviation of the sample means
+  
+  ## Draw a histogram
+  hist(sample_means, 
+       breaks = 100,
+       col="lightgreen",
+       border = "white",
+       las = 1,
+       xlim=c(my_min, my_max), # define the limits of X axis to ensure consistency
+       main=paste0("Sampling mean from a uniform distribution",
+                   "\n", # newline character
+                   "r=", format(r, scientific = FALSE),
+                   "; n=", format(n, scientific = FALSE),
+                   "; min=", my_min,
+                   "; max=", my_max))
+  
+  abline(v=seq(from = my_min, 
+               to = my_max, 
+               length.out=11), 
+         col = "darkgrey") ## manually add a vertical grid 
+  abline(v=c(my_min, my_max), lwd=2, col="blue") # Mark the limits
+  abline(v=(my_max + my_min)/2, lwd=2, col="brown") # Mark the mean
+  
+  arrow_height <- r/100 # a bit tricky but suitable
+  arrows(x0 = means_m - means_s, x1 = means_m + means_s, 
+         y0 = arrow_height,  y1 = arrow_height, 
+         code = 3, length = 0.1, lwd=2, 
+         col="brown") ## Mark an interval of ± 1 standard deviation around the sample mean
+}
+
+```
+
+
