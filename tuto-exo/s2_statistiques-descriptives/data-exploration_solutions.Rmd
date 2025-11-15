@@ -220,6 +220,11 @@ The data and metadata files have been loaded in the following R variables.
 | `protein_names` | `r nrow(protein_names)` | `r ncol(protein_names)` | Protein identifiers, protein names and gene names. One row per protein |
 | `sample_groups` | `r nrow(sample_groups)` | `r ncol(sample_groups)` | One row per sample, two columns inidicating its group and its patient identifier (number) |
 
+In the table above, check carefully the consistency between the dimensions of the 3 tables : 
+
+- `protein_names` should have the same number of rows as `log2_LFQ` (one row per protein)
+- the number of rows of `sample_groups` (one row per sample) should equal the number of columns of `log2_LFQ` (one column per sample)
+
 
 
 ## Exploration of the data values
@@ -227,7 +232,11 @@ The data and metadata files have been loaded in the following R variables.
 ### Histogram
 
 
-***Exercice :** Nous avons généré ci-dessous un histogramme de base pour représener la distribution de toutes les valeurs quantitatives du protéome, après avoir écarté les valeurs manquantes (*NA*). Lisez la documentation de la fonction `hist()`, et améliorez l'histogramme en modifiant le titre, les étiquettes des axes, et les autres paramètres qui vous sembleront pertinents. *
+**Exercice :** Nous avons généré ci-dessous un histogramme de base pour représener la distribution de toutes les valeurs quantitatives du protéome, après avoir écarté les valeurs manquantes (*NA*). 
+
+- Lisez la documentation de la fonction `hist()`, en prêtant une attention particulière aux options suivantes: `main`, `xlab`, `ylab`, `col`, `border`, `las`.
+- Améliorez l'histogramme en modifiant le titre, les étiquettes des axes, la couleur, et les autres paramètres qui vous sembleront pertinents. 
+
 
 ```{r hist_log2_LFQ_altogether, fig.width=7, fig.height=4.5, out.width="100%", fig.cap="Histogram of log2(LFQ) values from Canale's whole proteomics dataset. "}
 ## Create a vector with all the numeric values of the proteome quantification
@@ -261,7 +270,7 @@ grid() ## Add a discrete grid to mark the X and Y levels
 
 - The distribution is asymmetric, with a right-side skew (longer tail on the right than on the left)
 - The distribution is roughly unimodal (a single peak), but we see a "shoulder" between X values 27 and 30
-- Actually,  we don't expect *a priori* that this curve would follow a normal distribution, or any particular distribution, because it represents values for >8000 proteins, each of which is expected to have a specific level (concentration) related to transcriptional and post-transcriptional regulation
+- Globally, the shape of the distribution does not look to follow a norma distribution or any other specific theoretical distribution, but this is not surprising. Actually,  we don't expect *a priori* that this curve would follow a normal distribution, or any particular distribution, because it represents values for >8000 proteins, each of which is expected to have a specific level (concentration) related to transcriptional and post-transcriptional regulation
 
 
 
@@ -284,9 +293,11 @@ Le tableau en annexe 1 récapitule les principales statistiques utilisées pour 
 - `max` : maximum
 - `IQR`: Ecart interquartile
 
-Astuce : pour vous faciliter la tâche, nous avons initié la liste de paramètres avec les 3 premières statistiques, à vous de la compléter.
+- pour vous faciliter la tâche, nous avons initié la liste de paramètres avec les 3 premières statistiques, à vous de la compléter
+- il n'existe pas de fonction R qui calcule directement les quartile ou les percentiles, mais la fonction `quantiles()` vous permet de les calculer facilement. 
+- la fonction `quantiles()` retourne une valeur avec une "étiquette" indiquant le paramètre de probabilité que vous avez fourni. Ce paramètre peut être utile dans certains cas, mais dans la structure de liste ci-dessous il est perturbant car il s'ajoute automatiquement au nom de l'élément de la liste. Pour obtenir un résultat propre, combinez les fonctions `quantile(à`et `unname()`de la façon suivante:  `unname(quantile(prob = ...))`. 
 
-Note: nous avons calculé pour vous les paramètres $g_1$ ry $g_2$, pour lequel il n'existe pas de fonction prédéfinie dans R.  
+Note: dans cette solution, nous avons calculé pour vous les paramètres de dyssimétrie ($g_1$) et d'aplatissement ($g_2$), qui ne faisaient pas partie de l'énoncé.
 
 ```{r proteome_parameters}
 ## Compute a vector with the non-NA values of the proteome quantification
@@ -308,18 +319,11 @@ proteome_parameters$max <- max(x, 0.75)
 proteome_parameters$IQR <- IQR(x, 0.75)
 
 
-## Skewness : we use moments::skewness() to get the Pearson's parameter b1, and we compute manually Fisher's parameter g2, which is equivalent
-if (!require("moments")) {
-  install.packages("moments")
-}
-library(moments)
-proteome_parameters$b1 <- skewness(x)
-
+## Skewness : Fisher's g1 parameter
 proteome_parameters$g1 <- mean((x - proteome_parameters$mean)^3) / proteome_parameters$sd^3
 
-## Kurtosis : we use moments::kurtosis() to compute Pearson's parameter b2, and we compute manually Pearson's standardized g2 parameter, which equals b2 -3
-## (the Normal distribution is characterized by b1=3 and thus g2=0, more readable)
-proteome_parameters$b2 <- kurtosis(x)
+## Kurtosis : Fisher's g2 parameter
+## Note: the Normal distribution is characterized by g2=0
 proteome_parameters$g2 <- (mean((x - proteome_parameters$mean)^4) / proteome_parameters$sd^4) - 3
 
 ## Print a nicely formatted table in the report generated by knit. 
@@ -424,12 +428,9 @@ legend("topleft",
 **Exercice :** Dans le bloc de code ci-dessous, nous avons utilisé la fonction `apply()` pour  calculer la moyenne de chaque protéine, et nous avons stocké le résultat dans un vecteur nommé `mean_per_protein`. Notez que nous avons ajouté l'option `na.rm = TRUE`, que la fonction `apply()` transmet à la fonction `mean()`. 
 
 - Dessinez un histogramme avec la distribution des moyennes par protéines
-- Calculez l'écart-type de chaque protéine et stockez le résultat dans un vecteur nommé `sd_per_protein` 
-- Dessinez un histogramme avec la distribution des écarts-types par protéines
-- Au moyen de la fonction R `plot()`, dessinez un nuage de points (scatter plot) avec en abcsisse la moyenne par protéine et en ordonnée l'écart-type par protéine
 
 
-```{r hist_mean_per_protein}
+```{r hist_mean_per_protein, fig.width=8, fig.height=5, out.width="80%", fig.cap="Distribution of the mean per protein. "}
 #### Compute marginal statistics per line (protein) ####
 
 ## Mean per protein
@@ -438,32 +439,52 @@ mean_per_protein <- apply(log2_LFQ, 1, mean, na.rm = TRUE)
 
 ## Histogram of the means per protein
 
-### A VOUS DE JOUER ###
+hist(mean_per_protein, breaks=100, col="lightgreen", border="white",
+     main="Mean per protein",
+     xlab="mean(log2(LFQ))",
+     ylab="Number of proteins",
+     las=1)
+grid()
 
 ```
 
+
+Dans le bloc de code ci-dessous, 
+
+- Calculez l'écart-type de chaque protéine et stockez le résultat dans un vecteur nommé `sd_per_protein` 
+- Dessinez un histogramme avec la distribution des écarts-types par protéines
+- Au moyen de la fonction R `plot()`, dessinez un nuage de points (scatter plot) avec en abcsisse la moyenne par protéine et en ordonnée l'écart-type par protéine
+
+
 ```{r hist_sd_per_protein}
 ## Standard deviation per protein
-
-### A VOUS DE JOUER ###
-
-
+sd_per_protein <- apply(log2_LFQ, 1, sd, na.rm = TRUE)
 
 ## Histogram of the sd per protein
-
-### A VOUS DE JOUER ###
-
-
-## Dot plot with the 
-
-### A VOUS DE JOUER ###
+hist(sd_per_protein, breaks=100, col="orange", border="white",
+     main="Standard deviation per protein",
+     xlab="sd(log2(LFQ))",
+     ylab="Number of proteins",
+     las=1)
+grid()
 
 
 ```
 
 ```{r hist_protein_mean_vs_sd, fig.width=7, fig.height=7, out.width="100%", fig.cap="Mean versus standard deviation per protein. "}
 
-### A VOUS DE JOUER ###
+
+## Compute density colors to highlight regions with many overlapping dots
+cols <- densCols(mean_per_protein, sd_per_protein)
+
+## Dot plot with the standard deviation as a function of the mean per protein
+plot(mean_per_protein, sd_per_protein,
+     main = "Mean vs SD per protein",
+     xlab="Mean log2(LFQ) per protein",
+     ylab="Standard deviation of  log2(LFQ) per protein",
+     col = cols, pch = 16, cex = 0.6,
+     panel.first=grid(lty="solid", col="grey"),
+     las = 1)
 
 ```
 
@@ -472,13 +493,25 @@ mean_per_protein <- apply(log2_LFQ, 1, mean, na.rm = TRUE)
 
 **Exercice :**
 
-- utilisez la fonction `apply()` pour calculer la moyenne par colonne (échantillon), et stockez le résultat dans un vecteur nommé `mean_per_protein`
+- utilisez la fonction `apply()` pour calculer la moyenne par colonne (échantillon), et stockez le résultat dans un vecteur nommé `mean_per_sample`
 - utilisez la fonction `barplot()` pour visualiser les moyennes
 
-```{r barplot_mean_per_sample}
+```{r barplot_mean_per_sample, fig.height=4, fig.width=12, out.width="100%", fig.cap="Barplot of the mean per sample"}
+### Draw a barplot with the mean per sample (column) of the proteome table
 
+mean_per_sample <- apply(log2_LFQ, 2, mean, na.rm=TRUE)
+# barplot(mean_per_sample,
+#         main = "Mean per sample",
+#         cex.names = 0.5,
+#         horiz=TRUE,
+#         las = 1)
+barplot(mean_per_sample,
+        main = "Mean per sample",
+        cex.names = 0.5,
+        col = sample_groups$color,
+        horiz = FALSE,
+        las = 2)
 
-### A VOUS DE JOUER ###
 
 ```
 
@@ -554,20 +587,21 @@ The histogram below indicates the number of NA values per protein.
 
 ## Count the number of NA values per protein (row)
 na_per_protein <- apply(is.na(log2_LFQ), 1, sum)
+# range(na_per_protein)
 
 ## Generate a color palette from pink to green
 col_fun <- colorRampPalette(c("lightgreen", "red"))
 n_breaks <- ncol(log2_LFQ) + 1  # nb d’intervalles = nb breaks + 1
 
 ## Draw a histogram with the number of NA values per sample
-hist(na_per_protein - 0.5, 
-     breaks = -1:ncol(log2_LFQ),
+hist(na_per_protein, 
+     breaks = -0.5:(ncol(log2_LFQ)+0.5),
      las = 1,
      main = "Number of NA values per protein",
      xlab = "Number of NA values",
      ylab = "Number of proteins",
      col = col_fun(n_breaks),
-     border = "grey")
+     border = "white")
 
 ```
 
@@ -586,7 +620,7 @@ We suppress the rows (proteins) containing too many NA values.
 ## Create a clean data.frame by suppressing the lines (proteins) containing only NA values
 min_values_per_prot <- 5
 log2_LFQ_clean <- log2_LFQ[na_per_protein >= min_values_per_prot, ]
-nrow(log2_LFQ_clean)
+#nrow(log2_LFQ_clean)
 
 ```
 
@@ -633,33 +667,8 @@ plot(scores[,1], scores[,2],
 
 
 
-## Descriptive statistics
-
-
 ## Standardizing the data table
 
-
-## Descriptive statistics
-
-```{r}
-summary(log2_LFQ)
-
-```
-
-## Handling NA values
-
-```{r na_handling}
-## Count NA values per row
-## dim(na.omit(log2_LFQ))
-## table(apply(is.na(log2_LFQ), 1, sum) == 0)
-na_per_row = apply(is.na(log2_LFQ), 1, sum)
-hist(na_per_row, 
-     col="#FFBBBB",
-     breaks=(0:70)-0.5,
-     main = "Missing values per protein", 
-     xlab = " Number of NA values", 
-     ylab = "Number of proteins")
-```
 
 ## Standardization
 
@@ -708,15 +717,7 @@ range(apply(protein_stand, 1, mean, na.rm = TRUE), na.rm=TRUE) # Range of the me
 range(apply(protein_stand, 1, sd, na.rm = TRUE), na.rm=TRUE) # Range of the standard deviation per protein after centering
 ```
 
-```{r hist_parameters_per_protein, fig.width=14, fig.height=4, out.width="100%", fig.cap="**Protein-wise parameters. **"}
 
-par(mfrow=c(1,2))
-hist(mean_per_protein, main="Means per protein", breaks=100, xlab= "mean(log2(LFQ))", ylab="Number of proteins", col="#66FFFF")
-hist(sd_per_protein, main="Standard deviations per protein", breaks=100, xlab= "sd(log2(LFQ))", ylab="Number of proteins", col="#FFDDBB")
-
-par(mfrow=c(1,1))
-
-```
 
 ```{r hist_standardized_abundances, fig.width=7, fig.height=10, out.width="70%", fig.cap="**Protein abundance values before and after protein-wise standardization**"}
 

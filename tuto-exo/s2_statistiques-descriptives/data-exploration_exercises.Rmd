@@ -18,6 +18,8 @@ output:
   word_document:
     toc: true
     toc_depth: '3'
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r settings, include=FALSE, echo=FALSE, eval=TRUE}
@@ -135,15 +137,21 @@ We loaded the data and metadata files in the following variables.
 | `protein_names` | `r nrow(protein_names)` | `r ncol(protein_names)` | Protein identifiers, protein names and gene names. One row per protein |
 | `sample_groups` | `r nrow(sample_groups)` | `r ncol(sample_groups)` | One row per sample, two columns inidicating its group and its patient identifier (number) |
 
+In the table above, check carefully the consistency between the dimensions of the 3 tables : 
 
+- `protein_names` should have the same number of rows as `log2_LFQ` (one row per protein)
+- the number of rows of `sample_groups` (one row per sample) should equal the number of columns of `log2_LFQ` (one column per sample)
 
 ## Exploration of the data values
 
 ### Histogram
 
-***Exercice :** Nous avons généré ci-dessous un histogramme de base pour représener la distribution de toutes les valeurs quantitatives du protéome, après avoir écarté les valeurs manquantes (*NA*). Lisez la documentation de la fonction `hist()`, et améliorez l'histogramme en modifiant le titre, les étiquettes des axes, et les autres paramètres qui vous sembleront pertinents. *
+**Exercice :** Nous avons généré ci-dessous un histogramme de base pour représener la distribution de toutes les valeurs quantitatives du protéome, après avoir écarté les valeurs manquantes (*NA*). 
 
-```{r hist_log2_LFQ_altogether, fig.cap="Histogram of log2(LFQ) values from Canale's whole proteomics dataset. "}
+- Lisez la documentation de la fonction `hist()`, en prêtant une attention particulière aux options suivantes: `main`, `xlab`, `ylab`, `col`, `border`, `las`.
+- Améliorez l'histogramme en modifiant le titre, les étiquettes des axes, la couleur, et les autres paramètres qui vous sembleront pertinents. 
+
+```{r hist_log2_LFQ_altogether, fig.height=4.5, fig.width=7, out.width="50%",  fig.cap="Histogram of log2(LFQ) values from Canale's whole proteomics dataset. "}
 ## Create a vector with all the numeric values of the proteome quantification
 x <- na.omit(unlist(log2_LFQ))
 
@@ -151,6 +159,8 @@ x <- na.omit(unlist(log2_LFQ))
 hist(x)
 
 ```
+
+
 
 ***Votre interprétation : ** ajoutez ici vos commentaires concernant la forme générale de cet histogramme. *
 
@@ -175,39 +185,36 @@ Le tableau en annexe 1 récapitule les principales statistiques utilisées pour 
 - `max` : maximum
 - `IQR`: Ecart interquartile
 
-Astuce : pour vous faciliter la tâche, nous avons initié la liste de paramètres avec les 3 premières statistiques, à vous de la compléter.
+**Astuces :**
 
-Note: nous avons calculé pour vous les paramètres $g_1$ ry $g_2$, pour lequel il n'existe pas de fonction prédéfinie dans R.  
+- pour vous faciliter la tâche, nous avons initié la liste de paramètres avec les 3 premières statistiques, à vous de la compléter
+- il n'existe pas de fonction R qui calcule directement les quartile ou les percentiles, mais la fonction `quantiles()` vous permet de les calculer facilement. 
+- la fonction `quantiles()` retourne une valeur avec une "étiquette" indiquant le paramètre de probabilité que vous avez fourni. Ce paramètre peut être utile dans certains cas, mais dans la structure de liste ci-dessous il est perturbant car il s'ajoute automatiquement au nom de l'élément de la liste. Pour obtenir un résultat propre, combinez les fonctions `quantile(à`et `unname()`de la façon suivante:  `unname(quantile(prob = ...))`. 
+
 
 ```{r proteome_parameters}
 ## Compute a vector with the non-NA values of the proteome quantification
-x <- na.omit(unlist(log2_LFQ))
+x <- na.omit( ## Suppress NA values from the vectorized valors
+  unlist(log2_LFQ)   ## convert the data.frame in a vector with all the values for all proteins and all samples
+  )
 
 ## Compute descriptive statistics with the all the numeric values of the proteome
-proteome_parameters <- list()
+proteome_parameters <- list() ## Create an empty list
 
-proteome_parameters$mean <- mean(x)
+proteome_parameters$mean <- mean(x)  ## Add an element to the list with the mean of all the observations
 proteome_parameters$var <- var(x)
 proteome_parameters$sd <- sd(x)
+proteome_parameters$Q1 <- unname(quantile(x, probs = 0.25))
+proteome_parameters$median <- median(x)
+proteome_parameters$Q3 <- unname(quantile(x, probs = 0.75))
+proteome_parameters$IQR <- IQR(x)
 
-
-## Skewness : we use moments::skewness() to get the Pearson's parameter b1, and we compute manually Fisher's parameter g2, which is equivalent
-if (!require("moments")) {
-  install.packages("moments")
-}
-library(moments)
-proteome_parameters$b1 <- skewness(x)
-
-proteome_parameters$g1 <- mean((x - proteome_parameters$mean)^3) / proteome_parameters$sd^3
-
-## Kurtosis : we use moments::kurtosis() to compute Pearson's parameter b2, and we compute manually Pearson's standardized g2 parameter, which equals b2 -3
-## (the Normal distribution is characterized by b1=3 and thus g2=0, more readable)
-proteome_parameters$b2 <- kurtosis(x)
-proteome_parameters$g2 <- (mean((x - proteome_parameters$mean)^4) / proteome_parameters$sd^4) - 3
 
 ## Print a nicely formatted table in the report generated by knit. 
 ## For this we use the function kable() from the knit package
-kable(unlist(proteome_parameters), col.names = "values", caption = "Descriptive statistics computed on all the non-NA proteome values")
+kable(unlist(proteome_parameters), 
+      col.names = "values", 
+      caption = "Descriptive statistics computed on all the non-NA proteome values")
 
 ```
 
@@ -264,9 +271,6 @@ legend("topright",  ## Position of the legend
 **Exercice :** Dans le bloc de code ci-dessous, nous avons utilisé la fonction `apply()` pour  calculer la moyenne de chaque protéine, et nous avons stocké le résultat dans un vecteur nommé `mean_per_protein`. Notez que nous avons ajouté l'option `na.rm = TRUE`, que la fonction `apply()` transmet à la fonction `mean()`. 
 
 - Dessinez un histogramme avec la distribution des moyennes par protéines
-- Calculez l'écart-type de chaque protéine et stockez le résultat dans un vecteur nommé `sd_per_protein` 
-- Dessinez un histogramme avec la distribution des écarts-types par protéines
-- Au moyen de la fonction R `plot()`, dessinez un nuage de points (scatter plot) avec en abcsisse la moyenne par protéine et en ordonnée l'écart-type par protéine
 
 
 ```{r hist_mean_per_protein}
@@ -282,6 +286,13 @@ mean_per_protein <- apply(log2_LFQ, 1, mean, na.rm = TRUE)
 
 ```
 
+Dans le bloc de code ci-dessous, 
+
+- Calculez l'écart-type de chaque protéine et stockez le résultat dans un vecteur nommé `sd_per_protein` 
+- Dessinez un histogramme avec la distribution des écarts-types par protéines
+- Au moyen de la fonction R `plot()`, dessinez un nuage de points (scatter plot) avec en abcsisse la moyenne par protéine et en ordonnée l'écart-type par protéine
+
+
 ```{r hist_sd_per_protein}
 ## Standard deviation per protein
 
@@ -294,14 +305,12 @@ mean_per_protein <- apply(log2_LFQ, 1, mean, na.rm = TRUE)
 ### A VOUS DE JOUER ###
 
 
-## Dot plot with the 
-
-### A VOUS DE JOUER ###
-
 
 ```
 
 ```{r hist_protein_mean_vs_sd, fig.width=7, fig.height=7, out.width="100%", fig.cap="Mean versus standard deviation per protein. "}
+
+## Dot plot with the standard deviation as a function of the mean per protein
 
 ### A VOUS DE JOUER ###
 
@@ -312,10 +321,11 @@ mean_per_protein <- apply(log2_LFQ, 1, mean, na.rm = TRUE)
 
 **Exercice :**
 
-- utilisez la fonction `apply()` pour calculer la moyenne par colonne (échantillon), et stockez le résultat dans un vecteur nommé `mean_per_protein`
+- utilisez la fonction `apply()` pour calculer la moyenne par colonne (échantillon), et stockez le résultat dans un vecteur nommé `mean_per_sample`
 - utilisez la fonction `barplot()` pour visualiser les moyennes
 
 ```{r barplot_mean_per_sample}
+### Draw a barplot with the mean per sample (column) of the proteome table
 
 
 ### A VOUS DE JOUER ###
