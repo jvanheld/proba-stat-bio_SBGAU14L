@@ -1,5 +1,7 @@
 ---
 title: "Tuto/exo: tirage de nombres d'une distribution de probabilité"
+author: "Jacques van Helden (ORCID [0000-0002-8799-8584](https://orcid.org/0000-0002-8799-8584))"
+date: "`r Sys.Date()`"
 output:
   html_document:
     code_folding: hide
@@ -30,8 +32,7 @@ editor_options:
 
 ## Tutoriel
 
-Dans ce tuto, nous illustrons quelques concepts de base de l'échantillonnage statistique, et proposons quelques exercices pour vous familiariser avec ces concepts, et avec les fonctions R pertinentes. 
-
+Dans ce tutoriel, nous illustrons quelques concepts de base de l'échantillonnage statistique, et proposons quelques exercices pour vous familiariser avec ces concepts, et avec les fonctions R pertinentes. 
 
 
 ```{r sampling_nomal_simple}
@@ -39,31 +40,48 @@ Dans ce tuto, nous illustrons quelques concepts de base de l'échantillonnage st
 x <- rnorm(n = 100000, mean = 0, sd = 1)
 
 # Plot a histogram of the generated numbers
-hist(x, main="Distribution of 100,000 random numbers from a normal distribution", xlab="Value")
+hist(x, 
+     main="Distribution of 100,000 random numbers from a normal distribution",
+     xlab="Value")
 ```
 
 ### Séparation entre paramètres et exécution
 
-Nous réécrivons ce script minimaliste en séparant les paramètres, ce qui 
-- facilite la lisibilité du code, 
+Nous réécrivons ce script minimaliste en séparant les paramètres. Ceci
+
+- améliore la lisibilité du code, 
 - permet d'enrichir la documentation (commenter chaque paramètre)
-- tester l'impact des paramètres sur le résultat
+- permet tester l'impact des paramètres sur le résultat
 
 Nous utilisons la fonction `paste0()` pour écrire le titre du graphique en y incluant la valeur numérique de ces paramètres. 
 
 Astuce : par défaut, R affiche les grands nombres en notation scientifique (ex `1e+5`). Pour éviter cela, ous remplaçons `n` par `format(n, scientific=FALSE)` dans la commande `paste0()`. 
 
+Par convention, nous nommerons 
+
+- `mu` la variable R qui désigne la moyenne de la distribution théorique (par référence au symbole grec $\mu$ conventionnellement utilisé)
+- `sigma` la variable R qui désigne l'écart-type de la distribution théorique (par référence au symbole grec $\sigma$)
+
+
+
+
 ```{r sampling_normal_param}
 # Parameters
 n <- 100000 # Sample size
-m <- 50     # Mean of the normal distribution
-s <- 5      # Standard deviation of the normal distribution
+mu <- 50     # Mean of the normal distribution
+sigma <- 5      # Standard deviation of the normal distribution
 
-# Sample n numbers in a normal population of mean m and standard deviation s
-x <- rnorm(n = n, mean = m, sd = s)
+# Sample n numbers in a normal population of mean mu and standard deviation sigma
+x <- rnorm(n = n, mean = mu, sd = sigma)
 
 # Plot a histogram of the generated numbers
-hist(x)
+hist(x,
+     main=paste0("Sampling from a normal distribution",
+                 "\n", # newline character
+                 "n=", format(n, scientific = FALSE),
+                 ", m=", mu,
+                 ", s=", sigma),
+     xlab="Value")
 
 ```
 
@@ -72,23 +90,22 @@ hist(x)
 ## Exercice 1 : tirage de nombres dans une distribution aléatoire
 
 
-### Normal distribution
+### Distribution normale (gaussienne)
 
+Améliorez la présentation de l'histogramme, de la façon suivante: 
 
-1. Améliorez la présentation de l'histogramme, de la façon suivante: 
-
-    - utilisez l'option `breaks` pour réduire la largeur des intervalles de classe
-    - choisissez un e couleur qui vous plaît pour le corps et les contours de l'histogramme
-    - adaptez les options pour afficher les valeurs numériques horizontalement sur l'axe Y (et sur l'axe X)
+- utilisez l'option `breaks` pour réduire la largeur des intervalles de classe
+- choisissez une couleur qui vous plaît pour le corps et les contours de l'histogramme
+- adaptez les options pour afficher horizontalement les étiquettes des axes X et Y
 
 ```{r sampling_normal}
 # Parameters
 n <- 100000 # Sample size
-m <- 50     # Mean of the normal distribution
-s <- 5      # Standard deviation of the normal distribution
+mu <- 50     # Mean of the normal distribution
+sigma <- 5      # Standard deviation of the normal distribution
 
-# Sample n numbers in a normal population of mean m and standard deviation s
-x <- rnorm(n = n, mean = m, sd = s)
+# Sample n numbers in a normal population of mean mu and standard deviation sigma
+x <- rnorm(n = n, mean = mu, sd = sigma)
 
 # Plot a histogram of the generated numbers
 hist(x, 
@@ -99,12 +116,12 @@ hist(x,
      main=paste0("Sampling from a normal distribution",
                  "\n", # newline character
                  "n=", format(n, scientific = FALSE),
-                 ", m=", m,
-                 ", s=", s))
+                 ", m=", mu,
+                 ", s=", sigma))
 
 
-abline(v=m, lwd=2, col="brown") ## mark the mean
-arrows(x0 = m - s, x1 = m + s, 
+abline(v=mu, lwd=2, col="brown") ## mark the mean
+arrows(x0 = mu - sigma, x1 = mu + sigma, 
        y0 = n / 100,  y1 = n/100, 
        code = 3, length = 0.1, lwd=2, 
        col="brown") ## Mark an interval of ± 1 standard deviation around the mean
@@ -114,18 +131,21 @@ grid() ## Add a grid
 
 
 
-2. Ajoutez des blocs de code pour des tirages de même taille dans les distributions suivantes
-
-    - uniforme allant de -5 à +5
-    - chi2
-    - Poisson
-    
-Pour chaque distribution, jouez sur les paramètres pour évaluer leur impact sur la forme de la distribution. 
-
-Astuce : pour la distribution Poisson, utilisez des intervalles de classe séparés par des pas de 1
+## Exercice 2 : tirages aléatoires dans quelques distributions théoriques
 
 
-### Uniform distribution
+Dans les sous-sections suivantes, ajoutez des blocs de code pour effectuer un tirage dans
+-les distributions suivantes
+
+- uniforme (fonction `runif()`) allant de -5 à +5
+- $\chi^2$ chi carrée (`rchisq()`) avec 5 degrés de liberté
+- Poisson (`rpois()`)) avec une espérance $\lambda=5$ 
+
+Dans chaque cas, dessinez un histogramme pour représenter la distribution des valeurs obtenues, en indiquant le nom de la distribution et les paramètres dans le titre du graphique.
+
+Jouez ensuite sur les paramètres pour évaluer leur impact sur la forme de la distribution. 
+
+### Distribution uniforme
 
 
 ```{r sampling_uniform}
@@ -158,7 +178,7 @@ abline(v=(my_max + my_min)/2, lwd=2, col="brown") # Mark the mean
 ```
 
 
-### Chi-squared distribution
+### Distribution chi carrée ($\chi^2$)
 
 ```{r sampling_chi2}
 
@@ -180,7 +200,12 @@ grid()
 
 ```
 
-### Poisson distribution
+### Distribution de Poisson
+
+**Astuces : **
+
+- Pour la distribution Poisson, utilisez des intervalles de classe séparés par des pas de 1, allant de -0.5 jusqu'à $x_{max}+0.5$, où $x_{max}$ est le maximum des valeurs de $x$ obtenues dans votre tirage aléatoire. Pour cela, utilisez les fonctions `seq()`, `max()`. 
+
 
 ```{r sampling_poisson}
 
@@ -203,14 +228,29 @@ grid()
 ```
 
 
+****************************************************************
 
+## Exercice 3 : distribution d'échantillonnage de la moyenne
 
-## Exercice 2 : distribution d'échantillonnage de la moyenne
+Dans cet exercice, nous allons étudier la distribution d'échantillonnage de la moyenne, autrement dit la distribution des moyennes d'un grand nombre d'échantillons tirés aléatoirement dans une distribution théorique de notre choix (en commençant par la distribution uniforme). 
 
+Pour cela, nous allons créer une matrice dont chaque ligne représente un tirage aléatoire  nombres, dont nous calculerins ensuite la moyenne. 
 
-### Distribution uniforme
+Par convention, nous nommerons nos variables
 
-Créez une matrice (`matrix()`) de `r=10000` lignes et `n=5` colonnes, que vous remplirez avec des nombres aléatoires tirés dans une distribution uniforme (`runif()`) entre $-5$ et $5$. 
+- `r` pour le nombre de répétitions de l'essai, correspondant au nombre de lignes de la matrice
+- `n` pour la taille de l'échantillon, correspondant au nombre de colonnes de la matrice
+
+**Exercice**
+
+- Créez une matrice (`matrix()`) de `r=10000` lignes et `n=5` colonnes, que vous remplirez avec des nombres aléatoires tirés dans une distribution uniforme (`runif()`) entre $-5$ et $5$. 
+
+- Calculez la moyenne marginale sur les lignes de cette matrice
+- Dessinez un histogramme avec les valeurs de ces moyennes marginales
+- Marquez d'une barre verticale la moyenne théorique
+- Dans une autre couleur, marquez d'une barre verticale la moyenne observée pour l'ensemble de vos tirages
+- Interprétez les résultats : quelle est la forme générale de la moyenne d'échantillonnage ? Ressemble-t-elle à la distribution théorique dont vous avez tiré les nombres ? Ressemble-t-elle à une autre distribution théorique que vous connaissez ?
+
 
 ```{r sampling_means_unif}
 
@@ -263,24 +303,37 @@ arrows(x0 = means_m - means_s, x1 = means_m + means_s,
 
 ```
 
-### Impact de la taille d'échantillon
+
+### Exercice 4: impact de la taille d'échantillon
 
 
-Refaites l'expérience en faisant varier la taille d'échantillon $n$, en prenant successivement les valeurs 1, 2, 4, 8, 16, 32, 64, et dessinez pour chaque valeur de $n$ un histogramme. 
+- Refaites l'expérience ci-dessus en maintenant le même nombre de répétitions ($r$), mais en faisant varier la taille d'échantillon $n$, qui prendra successivement les valeurs 1, 2, 4, 8, 16, 32, 64
 
-Pour cela, vous pouvrz utiliser une boucle `for` en R. 
+Pour chaque valeur de $n$, 
 
-```{r sampling_means_unif_sample_size}
+- dessinez un histogramme, 
+- calculez la moyenne (`mean()` la variance (`var()`) et l'écart-type (`sd()`) des moyennes d'échantillons
+
+Quelle est la relation entre
+
+- la taille de l'échantillon et la variance de sa moyennne ?
+- la taille de l'échantillon et l'écart-type de sa moyennne ?
+
+
+**Astuce: **pour automatiser l'analyse avec une série de valeurs de $n$, vous pouvez utiliser une boucle `for`. Le bloc de code ci-dessous contient déjà les paramètres et la boucle (vide), à vous d'y insérer le code pour résoudre l'exercice
+
+```{r sampling_means_unif_sample_size, message=FALSE}
 
 # Plot a histogram of the generated numbers
 r <- 100000 # repetitions
-n <- 5
+n_values <- c(1, 2, 4, 8, 16, 32, 64)
 my_min <- -5
 my_max <- +5
-m <- (my_max - my_min)/2 # Compute the mean of the uniform distribution (it is at mid-distance between the max and the min)
+mu <- (my_max - my_min)/2 # Theoretical mean of the uniform distribution, at mid-distance between the max and the min
 
 ## Iterate the experiments
-for (n in c(1, 2, 4, 8, 16, 32, 64)) {
+for (n in n_values) {
+  message("Repetitions: r=", r, "; Sample size: n=", n)
   
   ## Draw random numbers 
   x <- runif(n = n * r, min = -5, max = +5)
