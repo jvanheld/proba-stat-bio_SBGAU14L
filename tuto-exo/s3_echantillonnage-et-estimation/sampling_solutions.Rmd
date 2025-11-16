@@ -30,6 +30,32 @@ editor_options:
   chunk_output_type: console
 ---
 
+
+
+```{r settings, include=FALSE, echo=FALSE, eval=TRUE}
+library(knitr)
+
+options(width = 300)
+# options(encoding = 'UTF-8')
+knitr::opts_chunk$set(
+  fig.width = 7, fig.height = 5, 
+  fig.path = 'figures/sampling_',
+  fig.align = "center", 
+  size = "tiny", 
+  echo = TRUE, 
+  eval = TRUE, 
+  warning = FALSE, 
+  message = FALSE, 
+  results = TRUE, 
+  comment = "")
+
+options(scipen = 12) ## Max number of digits for non-scientific notation
+# knitr::asis_output("\\footnotesize")
+
+```
+
+
+
 ## Tutoriel
 
 Dans ce tutoriel, nous illustrons quelques concepts de base de l'échantillonnage statistique, et proposons quelques exercices pour vous familiariser avec ces concepts, et avec les fonctions R pertinentes. 
@@ -55,7 +81,7 @@ Nous réécrivons ce script minimaliste en séparant les paramètres. Ceci
 
 Nous utilisons la fonction `paste0()` pour écrire le titre du graphique en y incluant la valeur numérique de ces paramètres. 
 
-Astuce : par défaut, R affiche les grands nombres en notation scientifique (ex `1e+5`). Pour éviter cela, ous remplaçons `n` par `format(n, scientific=FALSE)` dans la commande `paste0()`. 
+Astuce : par défaut, R affiche les grands nombres en notation scientifique (ex `1e+5`). Pour éviter cela, nous remplaçons `n` par `format(n, scientific=FALSE)` dans la commande `paste0()`. 
 
 Par convention, nous nommerons 
 
@@ -86,6 +112,7 @@ hist(x,
 ```
 
 
+****************************************************************
 
 ## Exercice 1 : tirage de nombres dans une distribution aléatoire
 
@@ -130,6 +157,7 @@ grid() ## Add a grid
 ```
 
 
+****************************************************************
 
 ## Exercice 2 : tirages aléatoires dans quelques distributions théoriques
 
@@ -234,7 +262,7 @@ grid()
 
 Dans cet exercice, nous allons étudier la distribution d'échantillonnage de la moyenne, autrement dit la distribution des moyennes d'un grand nombre d'échantillons tirés aléatoirement dans une distribution théorique de notre choix (en commençant par la distribution uniforme). 
 
-Pour cela, nous allons créer une matrice dont chaque ligne représente un tirage aléatoire  nombres, dont nous calculerins ensuite la moyenne. 
+Pour cela, nous allons créer une matrice dont chaque ligne représente un tirage aléatoire  nombres, dont nous calculerons ensuite la moyenne. 
 
 Par convention, nous nommerons nos variables
 
@@ -271,7 +299,7 @@ sample_means <- apply(X = x_matrix, MARGIN = 1, FUN = mean)
 
 ## Compute some statistics about the sample means
 means_m <- mean(sample_means) # compute the mean of the sample means
-means_s <- sd(sample_means) # compute the standard deviation of the sample means
+means_sd <- sd(sample_means) # compute the standard deviation of the sample means
 
 ## Draw a histogram
 hist(sample_means, 
@@ -295,7 +323,7 @@ abline(v=c(my_min, my_max), lwd=2, col="blue") # Mark the limits
 abline(v=(my_max + my_min)/2, lwd=2, col="brown") # Mark the mean
 
 arrow_height <- r/100 # a bit tricky but suitable
-arrows(x0 = means_m - means_s, x1 = means_m + means_s, 
+arrows(x0 = means_m - means_sd, x1 = means_m + means_sd, 
        y0 = arrow_height,  y1 = arrow_height, 
        code = 3, length = 0.1, lwd=2, 
        col="brown") ## Mark an interval of ± 1 standard deviation around the sample mean
@@ -303,8 +331,9 @@ arrows(x0 = means_m - means_s, x1 = means_m + means_s,
 
 ```
 
+****************************************************************
 
-### Exercice 4: impact de la taille d'échantillon
+## Exercice 4: impact de la taille d'échantillon
 
 
 - Refaites l'expérience ci-dessus en maintenant le même nombre de répétitions ($r$), mais en faisant varier la taille d'échantillon $n$, qui prendra successivement les valeurs 1, 2, 4, 8, 16, 32, 64
@@ -316,8 +345,8 @@ Pour chaque valeur de $n$,
 
 Quelle est la relation entre
 
-- la taille de l'échantillon et la variance de sa moyennne ?
-- la taille de l'échantillon et l'écart-type de sa moyennne ?
+- la taille de l'échantillon et la variance de sa moyenne ?
+- la taille de l'échantillon et l'écart-type de sa moyenne ?
 
 
 **Astuce: **pour automatiser l'analyse avec une série de valeurs de $n$, vous pouvez utiliser une boucle `for`. Le bloc de code ci-dessous contient déjà les paramètres et la boucle (vide), à vous d'y insérer le code pour résoudre l'exercice
@@ -329,14 +358,19 @@ r <- 100000 # repetitions
 n_values <- c(1, 2, 4, 8, 16, 32, 64)
 my_min <- -5
 my_max <- +5
-mu <- (my_max - my_min)/2 # Theoretical mean of the uniform distribution, at mid-distance between the max and the min
+mu <- (my_max + my_min)/2 # Theoretical mean of the uniform distribution, at mid-distance between the max and the min
+
+## Initiate vectors to collect the sampling means parameters
+means_m_values <- vector()     ## mean of the r sample means
+means_sd_values <- vector()    ## standard deviation of the r sample means
+means_var_values <- vector()   ## variance deviation of the r sample means
 
 ## Iterate the experiments
 for (n in n_values) {
   message("Repetitions: r=", r, "; Sample size: n=", n)
   
   ## Draw random numbers 
-  x <- runif(n = n * r, min = -5, max = +5)
+  x <- runif(n = n * r, min = my_min, max = my_max)
   
   ## Inject the numbers in a matrix with r rows and n columns
   x_matrix <- matrix(data = x, nrow = r, ncol = n)
@@ -346,7 +380,13 @@ for (n in n_values) {
   
   ## Compute some statistics about the sample means
   means_m <- mean(sample_means) # compute the mean of the sample means
-  means_s <- sd(sample_means) # compute the standard deviation of the sample means
+  means_sd <- sd(sample_means) # compute the standard deviation of the sample means
+  means_var <- var(sample_means) # compute the standard deviation of the sample means
+
+  ## Append the current parameters to the vectors  
+  means_m_values <- c(means_m_values, means_m)
+  means_sd_values <- c(means_sd_values, means_sd)
+  means_var_values <- c(means_var_values, means_var)
   
   ## Draw a histogram
   hist(sample_means, 
@@ -366,16 +406,126 @@ for (n in n_values) {
                to = my_max, 
                length.out=11), 
          col = "darkgrey") ## manually add a vertical grid 
-  abline(v=c(my_min, my_max), lwd=2, col="blue") # Mark the limits
-  abline(v=(my_max + my_min)/2, lwd=2, col="brown") # Mark the mean
+  abline(v=c(my_min, my_max), lwd=2, col="darkblue") # Mark the limits
+  abline(v=mu, lwd=1, col="blue") # Mark the mean
+  abline(v=means_m, lwd=2, col="orange", lty = "dashed") # Mark the mean
   
   arrow_height <- r/100 # a bit tricky but suitable
-  arrows(x0 = means_m - means_s, x1 = means_m + means_s, 
+  arrows(x0 = means_m - means_sd, x1 = means_m + means_sd, 
          y0 = arrow_height,  y1 = arrow_height, 
          code = 3, length = 0.1, lwd=2, 
          col="brown") ## Mark an interval of ± 1 standard deviation around the sample mean
+  
+  
+  legend(
+    "topright",
+    legend = c(
+      paste0("mu = ", mu), 
+      paste0("means_m = ", round(means_m, digits = 5)), 
+      paste0("means_sd = ", round(means_sd, digits = 4)),
+      paste0("means_var = ", round(means_var, digits = 4))
+      ),
+    col = c("blue", "orange", "brown", NULL),
+    lty = c("solid", "dashed", "solid", NULL),
+    lwd=c(1,2,2, 0),
+    cex=0.8
+  )
 }
+
+## Print a table with the results
+kable(
+  data.frame(n = n_values,
+             m = means_m_values,
+             var = means_var_values,
+             sd = means_sd_values),
+  digits = c(0, 5, 3, 3), 
+  caption = "Impact of sample size (n) on the mean, variance and standard deviation of the sampling means. ")
 
 ```
 
 
+
+```{r impact_sample_size_mean_of_means}
+## Plot the mean of sampling means as a function of sample size
+plot(n_values, means_m_values, 
+     type = "b",
+     pch = 19,
+     lty = "dashed",
+     col = "orange",
+     main = "Impact of sample size on the mean of sampling means",
+     ylim = c(my_min, my_max), 
+     ylab = paste0("Mean of the sampling mean (", r, " repetitions)"),
+     xlab = "Sample size (n)",
+     las = 1,
+     panel.first = c(abline(h = mu, col = "blue", lwd = 1), 
+                   grid())
+     )
+
+
+```
+
+
+
+```{r impact_sample_size_var_of_means}
+## Plot the variance of sampling means as a function of sample size
+plot(n_values, means_var_values, 
+     type = "b",
+     pch = 19,
+     lty = "dashed",
+     col = "brown",
+     main = "Impact of sample size on the variance of sampling means",
+     ylim = c(0, ceiling(max(means_var_values))),
+     ylab = paste0("Variance of the sampling mean (", r, " repetitions)"),
+     xlab = "Sample size (n)",
+     las = 1,
+     panel.first = c(grid(),
+                     abline(h=0, col="black"))
+     )
+
+
+```
+
+
+```{r impact_sample_size_var_of_means_logX}
+## Plot the variance of sampling means as a function of sample size
+plot(n_values, means_var_values, 
+     type = "b",
+     pch = 19,
+     lty = "dashed",
+     col = "brown",
+     log = "xy",
+     main = "Impact of sample size on the variance of sampling means\n(logarithmic X and Y scales)",
+     ylab = paste0("Variance of the sampling mean (", r, " repetitions)"),
+     xlab = "Sample size (n)",
+     las = 1,
+     panel.first = c(grid(, equilogs = FALSE))
+     )
+
+
+```
+
+
+
+
+```{r impact_sample_size_sd_of_means}
+## Plot the standard deviation of sampling means as a function of sample size
+plot(n_values, means_sd_values, 
+     type = "b",
+     pch = 19,
+     lty = "dashed",
+     col = "brown",
+     main = "Impact of sample size on the standard deviation of sampling means",
+     ylim = c(0, ceiling(max(means_sd_values))),
+     ylab = paste0("Standard deviation of the sampling mean (", r, " repetitions)"),
+     xlab = "Sample size (n)",
+     las = 1,
+     panel.first = c(grid(),
+                     abline(h=0, col="black"))
+     )
+
+
+```
+
+
+****************************************************************
+****************************************************************
