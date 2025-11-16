@@ -30,6 +30,31 @@ editor_options:
   chunk_output_type: console
 ---
 
+
+
+```{r settings, include=FALSE, echo=FALSE, eval=TRUE}
+library(knitr)
+
+options(width = 300)
+# options(encoding = 'UTF-8')
+knitr::opts_chunk$set(
+  fig.width = 7, fig.height = 5, 
+  fig.path = 'figures/sampling_',
+  fig.align = "center", 
+  size = "tiny", 
+  echo = TRUE, 
+  eval = TRUE, 
+  warning = FALSE, 
+  message = FALSE, 
+  results = TRUE, 
+  comment = "")
+
+options(scipen = 12) ## Max number of digits for non-scientific notation
+# knitr::asis_output("\\footnotesize")
+
+```
+
+
 ## Tutoriel
 
 Dans ce tutoriel, nous illustrons quelques concepts de base de l'échantillonnage statistique, et proposons quelques exercices pour vous familiariser avec ces concepts, et avec les fonctions R pertinentes. 
@@ -55,7 +80,7 @@ Nous réécrivons ce script minimaliste en séparant les paramètres. Ceci
 
 Nous utilisons la fonction `paste0()` pour écrire le titre du graphique en y incluant la valeur numérique de ces paramètres. 
 
-Astuce : par défaut, R affiche les grands nombres en notation scientifique (ex `1e+5`). Pour éviter cela, ous remplaçons `n` par `format(n, scientific=FALSE)` dans la commande `paste0()`. 
+Astuce : par défaut, R affiche les grands nombres en notation scientifique (ex `1e+5`). Pour éviter cela, nous remplaçons `n` par `format(n, scientific=FALSE)` dans la commande `paste0()`. 
 
 Par convention, nous nommerons 
 
@@ -192,7 +217,7 @@ my_lambda <- 5
 
 Dans cet exercice, nous allons étudier la distribution d'échantillonnage de la moyenne, autrement dit la distribution des moyennes d'un grand nombre d'échantillons tirés aléatoirement dans une distribution théorique de notre choix (en commençant par la distribution uniforme). 
 
-Pour cela, nous allons créer une matrice dont chaque ligne représente un tirage aléatoire  nombres, dont nous calculerins ensuite la moyenne. 
+Pour cela, nous allons créer une matrice dont chaque ligne représente un tirage aléatoire  nombres, dont nous calculerons ensuite la moyenne. 
 
 Par convention, nous nommerons nos variables
 
@@ -223,12 +248,12 @@ Pour chaque valeur de $n$,
 
 Quelle est la relation entre
 
-- la taille de l'échantillon et la variance de sa moyennne ?
-- la taille de l'échantillon et l'écart-type de sa moyennne ?
+- la taille de l'échantillon et la variance de sa moyenne ?
+- la taille de l'échantillon et l'écart-type de sa moyenne ?
 
 
 
-**Astuce: **pour automatiser l'analyse avec une série de valeurs de $n$, vous pouvez utiliser une boucle `for`. Le bloc de code ci-dessous contient déjà les paramètres et la boucle (vide), à vous d'y insérer le code pour résoudre l'exercice
+**Astuce:** pour automatiser l'analyse avec une série de valeurs de $n$, vous pouvez utiliser une boucle `for`. Le bloc de code ci-dessous contient déjà les paramètres et la boucle (vide), à vous d'y insérer le code pour résoudre l'exercice
 
 ```{r sampling_means_unif_sample_size, message=FALSE}
 
@@ -247,3 +272,7 @@ for (n in n_values) {
 }
 
 ```
+
+
+****************************************************************
+****************************************************************
