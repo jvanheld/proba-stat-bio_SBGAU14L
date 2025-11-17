@@ -1,33 +1,36 @@
 ---
-title: "Tuto/exo: tirage de nombres d'une distribution de probabilité"
-author: "Votre Nom"
+title: 'Tuto/exo: tirage de nombres d''une distribution de probabilité'
+author: "Jacques van Helden (ORCID [0000-0002-8799-8584](https://orcid.org/0000-0002-8799-8584))"
 date: "`r Sys.Date()`"
 output:
   html_document:
-    self_contained: yes
+    self_contained: no
     code_folding: hide
-    collapsed: yes
-    fig_caption: yes
+    collapsed: true
+    fig_caption: true
     highlight: zenburn
     theme: cerulean
-    toc: yes
+    toc: true
     toc_depth: 3
-    toc_float: yes
+    toc_float: true
   pdf_document:
-    fig_caption: yes
+    fig_caption: true
     highlight: zenburn
-    toc: yes
+    toc: true
     toc_depth: 3
   html_notebook:
     self_contained: yes
     code_folding: show
-    collapsed: no
-    fig_caption: yes
+    collapsed: false
+    fig_caption: true
     highlight: zenburn
     theme: cerulean
-    toc: yes
+    toc: true
     toc_depth: 3
-    toc_float: yes
+    toc_float: true
+  word_document:
+    toc: true
+    toc_depth: '3'
 editor_options:
   chunk_output_type: console
 ---
@@ -55,6 +58,7 @@ options(scipen = 12) ## Max number of digits for non-scientific notation
 # knitr::asis_output("\\footnotesize")
 
 ```
+
 
 
 ## Tutoriel
@@ -90,6 +94,8 @@ Par convention, nous nommerons
 - `sigma` la variable R qui désigne l'écart-type de la distribution théorique (par référence au symbole grec $\sigma$)
 
 
+
+
 ```{r sampling_normal_param}
 # Parameters
 n <- 100000 # Sample size
@@ -110,21 +116,19 @@ hist(x,
 
 ```
 
+
 ****************************************************************
 
+## Exercice 1 : tirage de nombres dans une distribution aléatoire
 
-## Exercice 1 : tirage de nombres dans une distribution normale
 
-
-### Normal distribution
+### Distribution normale (gaussienne)
 
 Améliorez la présentation de l'histogramme, de la façon suivante: 
 
 - utilisez l'option `breaks` pour réduire la largeur des intervalles de classe
 - choisissez une couleur qui vous plaît pour le corps et les contours de l'histogramme
 - adaptez les options pour afficher horizontalement les étiquettes des axes X et Y
-- marquez la moyenne théorique au moyen d'une ligne verticale (`abline()`)
-- marquez d'une flèche horizontale un intervalle de ± 1 écart-type autour de la moyenne théorique
 
 ```{r sampling_normal}
 # Parameters
@@ -135,11 +139,12 @@ sigma <- 5      # Standard deviation of the normal distribution
 # Sample n numbers in a normal population of mean mu and standard deviation sigma
 x <- rnorm(n = n, mean = mu, sd = sigma)
 
-### A VOUS DE JOUER ###
-
-
 # Plot a histogram of the generated numbers
 hist(x, 
+     breaks = 100,
+     col="skyblue",
+     border = "white",
+     las = 1,   # display axis labels horizontally
      main=paste0("Sampling from a normal distribution",
                  "\n", # newline character
                  "n=", format(n, scientific = FALSE),
@@ -147,6 +152,12 @@ hist(x,
                  ", sigma=", sigma))
 
 
+abline(v=mu, lwd=2, col="brown") ## mark the mean
+arrows(x0 = mu - sigma, x1 = mu + sigma, 
+       y0 = n / 100,  y1 = n/100, 
+       code = 3, length = 0.1, lwd=2, 
+       col="brown") ## Mark an interval of ± 1 standard deviation around the mean
+grid() ## Add a grid
 
 ```
 
@@ -159,7 +170,7 @@ hist(x,
 Dans les sous-sections suivantes, ajoutez des blocs de code pour effectuer un tirage dans
 -les distributions suivantes
 
-- uniforme (fonction `runif()`) allant de -5 à +5
+- uniforme (fonction `runif()`) dans un intervalle de $+10$ à $+20$
 - $\chi^2$ chi carrée (`rchisq()`) avec 5 degrés de liberté
 - Poisson (`rpois()`)) avec une espérance $\lambda=5$ 
 
@@ -167,17 +178,39 @@ Dans chaque cas, dessinez un histogramme pour représenter la distribution des v
 
 Jouez ensuite sur les paramètres pour évaluer leur impact sur la forme de la distribution. 
 
-
 ### Distribution uniforme
 
 
 ```{r sampling_uniform}
-## Parameters for the sampling in the unifom distribution
-n <- 100000
-my_min <- -5
-my_max <- +5
 
-### A VOUS DE JOUER ###
+# Plot a histogram of the generated numbers
+n <- 100000
+my_min <- 10
+my_max <- 20
+
+
+## Draw random 0numbers
+x <- runif(n = n, min = my_min, max = my_max)
+
+## Plot the histogram
+hist(x, 
+     breaks = 100,
+     col="skyblue",
+     border = "white",
+     las = 1,
+     xlim=c(my_min, my_max), # define the limits of X axis to ensure consistency
+     main=paste0("Sampling from a uniform distribution",
+                 "\n", # newline character
+                 "n=", format(n, scientific = FALSE),
+                "; min=", my_min,
+                "; max=", my_max))
+## manually add a vertical grid 
+abline(v=seq(from = my_min, 
+             to = my_max, 
+             length.out=11), 
+       col = "darkgrey") 
+abline(v=c(my_min, my_max), lwd=2, col="blue") # Mark the limits
+abline(v=(my_max + my_min)/2, lwd=2, col="brown") # Mark the mean
 
 
 ```
@@ -185,14 +218,30 @@ my_max <- +5
 
 ### Distribution chi carrée ($\chi^2$)
 
+Sur l'histogramme, nous marquons d'une ligne verticale la valeur des degrés de liberté. 
+
+
 ```{r sampling_chi2}
-## Parameters for the sampling in the chi-squared distribution
+
+# Plot a histogram of the generated numbers
 n <- 100000
 my_df <- 5
 
-### A VOUS DE JOUER ###
+## Draw random numbers in a chi2 distribution
+x <- rchisq(n = n, df = my_df)
 
-
+## Draw rthe histogram
+hist(x, 
+     breaks = 100,   ## increase the number of class intervals
+     col="skyblue",
+     border = "white",
+     las = 1,
+     main=paste0("Sampling from a chi-squared distribution",
+                 "\n", # newline character
+                 "n=", format(n, scientific = FALSE),
+                ", df=", my_df))
+abline(v=my_df, lwd=2, col="brown")
+grid()
 
 ```
 
@@ -202,14 +251,30 @@ my_df <- 5
 
 
 ```{r sampling_poisson}
-## Parameters for the sampling in the Poisson distribution
+
+# Plot a histogram of the generated numbers
 n <- 100000
 my_lambda <- 5
 
-### A VOUS DE JOUER ###
+## Generate te data by drawing random numbers
+x <- rpois(n = n, lambda = my_lambda)
 
+
+## Draw the histogram
+hist(x, 
+     breaks = -0.5:(max(x) + 0.5),
+     col="skyblue",
+     border = "white",
+     las = 1,
+     main=paste0("Sampling from a Poisson distribution",
+                 "\n", # newline character
+                 "n=", format(n, scientific = FALSE),
+                ", lambda=", my_lambda))
+abline(v=my_lambda, lwd=2, col="brown")
+grid()
 
 ```
+
 
 ****************************************************************
 
@@ -226,19 +291,72 @@ Par convention, nous nommerons nos variables
 
 **Exercice**
 
-- Créez une matrice (`matrix()`) de `r=10000` lignes et `n=5` colonnes, que vous remplirez avec des nombres aléatoires tirés dans une distribution uniforme (`runif()`) entre $-5$ et $5$. 
+- Créez une matrice (avec la fonction R `matrix()`) de `r=10000` lignes et `n=5` colonnes, que vous remplirez avec des nombres aléatoires tirés dans une distribution uniforme (`runif()`) entre $10$ et $20$. 
 
-- Calculez la moyenne marginale sur les lignes de cette matrice
+- Calculez la moyenne marginale sur les lignes de cette matrice au  moyen de la fonction `rowMeans()`, et stockez le résultat dans un vecteur nommé `sample_means`
 - Dessinez un histogramme avec les valeurs de ces moyennes marginales
-- Marquez d'une barre verticale la moyenne théorique
-- Dans une autre couleur, marquez d'une barre verticale la moyenne observée pour l'ensemble de vos tirages
-- Interprétez les résultats : quelle est la forme générale de la moyenne d'échantillonnage ? Ressemble-t-elle à la distribution théorique dont vous avez tiré les nombres ? Ressemble-t-elle à une autre distribution théorique que vous connaissez ?
+- Marquez d'une barre verticale la moyenne théorique $\mu$
+- Dans une autre couleur, marquez d'une barre verticale la moyenne observée pour l'ensemble de vos tirages $m$
+- Interprétez les résultats : quelle est la forme générale de la distribution d'échantillonnage de la moyehne ? Ressemble-t-elle à la distribution théorique dont vous avez tiré les nombres ? Ressemble-t-elle à une autre distribution théorique que vous connaissez ?
+
+
+```{r sampling_means_unif, fig.width=7, fig.height=5, out.width="80%", fig.cap="Distribution d'échantillonnage de la moyenne d'un tirage de 5 nombres dans une distribution uniforme. "}
+
+# Plot a histogram of the generated numbers
+r <- 100000     # repetitions
+n <- 5          # sample size for each repetition
+my_min <- 10    # min of the uniform distribution
+my_max <- 20    # max of the uniform distribution
+
+## Draw random numbers 
+x <- runif(n = n * r, min = my_min, max = my_max)
+
+## Inject the numbers in a matrix with r rows and n columns
+x_matrix <- matrix(data = x, nrow = r, ncol = n)
+
+## Compute sample means
+sample_means <- apply(X = x_matrix, MARGIN = 1, FUN = mean)
+
+## Compute some statistics about the sample means
+means_m <- mean(sample_means) # compute the mean of the sample means
+means_sd <- sd(sample_means) # compute the standard deviation of the sample means
+
+## Draw a histogram
+hist(sample_means, 
+     breaks = 100,
+     col="lightgreen",
+     border = "white",
+     las = 1,
+     xlim=c(my_min, my_max), # define the limits of X axis to ensure consistency
+     main=paste0("Sampling mean from a uniform distribution",
+                 "\n", # newline character
+                 "r=", format(r, scientific = FALSE),
+                 "; n=", format(n, scientific = FALSE),
+                 "; min=", my_min,
+                 "; max=", my_max))
+
+abline(v=seq(from = my_min, 
+             to = my_max, 
+             length.out=11), 
+       col = "darkgrey") ## manually add a vertical grid 
+abline(v=c(my_min, my_max), lwd=2, col="blue") # Mark the limits
+abline(v=(my_max + my_min)/2, lwd=2, col="brown") # Mark the mean
+
+arrow_height <- r/100 # a bit tricky but suitable
+arrows(x0 = means_m - means_sd, x1 = means_m + means_sd, 
+       y0 = arrow_height,  y1 = arrow_height, 
+       code = 3, length = 0.1, lwd=2, 
+       col="brown") ## Mark an interval of ± 1 standard deviation around the sample mean
+
+
+```
 
 ****************************************************************
 
-### Exercice 4: impact de la taille d'échantillon
+## Exercice 4: impact de la taille d'échantillon
 
-Refaites l'expérience ci-dessus en maintenant le même nombre de répétitions ($r$), mais en faisant varier la taille d'échantillon $n$, qui prendra successivement les valeurs $1$, $2$, $4$, $8$, $16$, $32$, $64$.
+
+Refaites l'expérience ci-dessus en maintenant le même nombre de répétitions ($r=`r r`$), mais en faisant varier la taille d'échantillon $n$, qui prendra successivement les valeurs $1$, $2$, $4$, $8$, $16$, $32$, $64$.
 
 Pour chaque valeur de $n$, 
 
@@ -251,27 +369,207 @@ Quelle est la relation entre
 - la taille de l'échantillon et l'écart-type de sa moyenne ?
 
 
+**Astuce: **pour automatiser l'analyse avec une série de valeurs de $n$, vous pouvez utiliser une boucle `for`. Le bloc de code ci-dessous contient déjà les paramètres et la boucle (vide), à vous d'y insérer le code pour résoudre l'exercice
 
-**Astuce:** pour automatiser l'analyse avec une série de valeurs de $n$, vous pouvez utiliser une boucle `for`. Le bloc de code ci-dessous contient déjà les paramètres et la boucle (vide), à vous d'y insérer le code pour résoudre l'exercice
-
-```{r sampling_means_unif_sample_size, message=FALSE}
+```{r sampling_means_unif_sample_size, fig.width=7, fig.height=5, out.width="80%", fig.cap="Impact de la taille d'échantillon sur la distribution d'échantillonnage de la moyenne. ", message=FALSE}
 
 # Plot a histogram of the generated numbers
 r <- 100000 # repetitions
 n_values <- c(1, 2, 4, 8, 16, 32, 64)
-my_min <- -5
-my_max <- +5
-mu <- (my_max - my_min)/2 # Theoretical mean of the uniform distribution, at mid-distance between the max and the min
+my_min <- 10
+my_max <- 20
+mu <- (my_max + my_min)/2 # Theoretical mean of the uniform distribution, at mid-distance between the max and the min
+
+## Initiate vectors to collect the sampling means parameters
+means_m_values <- vector()     ## mean of the r sample means
+means_sd_values <- vector()    ## standard deviation of the r sample means
+means_var_values <- vector()   ## variance deviation of the r sample means
 
 ## Iterate the experiments
 for (n in n_values) {
   message("Repetitions: r=", r, "; Sample size: n=", n)
-  ### A VOUS DE JOUER ###
   
+  ## Draw random numbers 
+  x <- runif(n = n * r, min = my_min, max = my_max)
+  
+  ## Inject the numbers in a matrix with r rows and n columns
+  x_matrix <- matrix(data = x, nrow = r, ncol = n)
+  
+  ## Compute sample means
+  sample_means <- apply(X = x_matrix, MARGIN = 1, FUN = mean)
+  
+  ## Compute some statistics about the sample means
+  means_m <- mean(sample_means) # compute the mean of the sample means
+
+  ## We compute it manually because R var() divides by n-1, which estimates the population variance but is not appropriate for the sample variance we need here
+  means_var <- sum((sample_means - means_m)^2)/r # compute the variance of the sample means. 
+  # means_var <- (r-1)/r * var(sample_means) # compute the variance of the sample means. We correct the corrective factor r-1, which serves to infer the population mean
+  means_sd <- sqrt(means_var) # compute the standard deviation of the sample means
+  
+  ## Append the current parameters to the vectors  
+  means_m_values <- c(means_m_values, means_m)
+  means_sd_values <- c(means_sd_values, means_sd)
+  means_var_values <- c(means_var_values, means_var)
+  
+  ## Draw a histogram
+  hist(sample_means, 
+       breaks = 100,
+       col="lightgreen",
+       border = "white",
+       las = 1,
+       xlim=c(my_min, my_max), # define the limits of X axis to ensure consistency
+       main=paste0("Sampling mean from a uniform distribution",
+                   "\n", # newline character
+                   "r=", format(r, scientific = FALSE),
+                   "; n=", format(n, scientific = FALSE),
+                   "; min=", my_min,
+                   "; max=", my_max))
+  
+  abline(v=seq(from = my_min, 
+               to = my_max, 
+               length.out=11), 
+         col = "darkgrey") ## manually add a vertical grid 
+  abline(v=c(my_min, my_max), lwd=2, col="darkblue") # Mark the limits
+  abline(v=mu, lwd=1, col="blue") # Mark the mean
+  abline(v=means_m, lwd=2, col="orange", lty = "dashed") # Mark the mean
+  
+  arrow_height <- r/100 # a bit tricky but suitable
+  arrows(x0 = means_m - means_sd, x1 = means_m + means_sd, 
+         y0 = arrow_height,  y1 = arrow_height, 
+         code = 3, length = 0.1, lwd=2, 
+         col="brown") ## Mark an interval of ± 1 standard deviation around the sample mean
+  
+  
+  legend(
+    "topright",
+    legend = c(
+      paste0("mu = ", mu), 
+      paste0("means_m = ", round(means_m, digits = 5)), 
+      paste0("means_sd = ", round(means_sd, digits = 4)),
+      paste0("means_var = ", round(means_var, digits = 4))
+      ),
+    col = c("blue", "orange", "brown", NULL),
+    lty = c("solid", "dashed", "solid", NULL),
+    lwd=c(1,2,2, 0),
+    cex=0.8
+  )
 }
+
+## Print a table with the results
+kable(
+  data.frame(n = n_values,
+             m = means_m_values,
+             var = means_var_values,
+             sd = means_sd_values),
+  digits = c(0, 5, 3, 3), 
+  caption = "Impact of sample size (n) on the mean, variance and standard deviation of the sampling means. ")
 
 ```
 
+
+
+
+
+```{r impact_sample_size_var_of_means}
+## Plot the variance of sampling means as a function of sample size
+plot(n_values, means_var_values, 
+     type = "b",
+     pch = 19,
+     lty = "dashed",
+     col = "brown",
+     main = "Impact of sample size on the variance of sampling means",
+     ylim = c(0, ceiling(max(means_var_values))),
+     ylab = paste0("Variance of the sampling mean (", r, " repetitions)"),
+     xlab = "Sample size (n)",
+     las = 1,
+     panel.first = c(grid(),
+                     abline(h=0, col="black"))
+     )
+
+
+```
+
+
+```{r impact_sample_size_var_of_means_logX}
+## Plot the variance of sampling means as a function of sample size
+plot(n_values, means_var_values, 
+     type = "b",
+     pch = 19,
+     lty = "dashed",
+     col = "brown",
+     log = "xy",
+     main = "Impact of sample size on the variance of sampling means\n(logarithmic X and Y scales)",
+     ylab = paste0("Variance of the sampling mean (", r, " repetitions)"),
+     xlab = "Sample size (n)",
+     las = 1,
+     panel.first = c(grid(, equilogs = FALSE))
+     )
+
+
+```
+
+
+
+
+```{r impact_sample_size_sd_of_means}
+## Plot the standard deviation of sampling means as a function of sample size
+plot(n_values, means_sd_values, 
+     type = "b",
+     pch = 19,
+     lty = "dashed",
+     col = "brown",
+     main = "Impact of sample size on the standard deviation of sampling means",
+     ylim = c(0, ceiling(max(means_sd_values))),
+     ylab = paste0("Standard deviation of the sampling mean (", r, " repetitions)"),
+     xlab = "Sample size (n)",
+     las = 1,
+     panel.first = c(grid(),
+                     abline(h=0, col="black"))
+     )
+
+
+```
+
+
+```{r impact_sample_size_mean_of_means}
+## Plot the mean of sampling means as a function of sample size
+plot(n_values, means_m_values, 
+     type = "p",
+     pch = 19,
+     lty = "solid",
+     col = "orange",
+     main = "Impact of sample size on the distribution of sampling means",
+     ylim = c(my_min, my_max), 
+     ylab = paste0("Mean of the sampling mean (", r, " repetitions)"),
+     xlab = "Sample size (n)", 
+     las = 1,
+     panel.first = c(grid(),
+                     abline(h = mu, col = "blue", lwd = 1))
+     )
+
+
+arrows(x0 = n_values, x1 = n_values, 
+       y0 = means_m_values - means_sd_values,  y1 = means_m_values + means_sd_values, 
+       code = 3, length = 0.07, lwd=2, 
+       col="brown") ## Mark an interval of ± 1 standard deviation around the mean
+legend("topright",
+       legend = c("mu", "mean of the means", "standard deviation of the means"),
+       lwd = c(1, 0, 2),
+       pch=c(NA, 19, NA),
+       col = c("blue", "orange", "brown")
+)
+
+```
+
+
+### Erreur standard (standard error)
+
+
+| Parameter | Formula |
+|----------------|-------------------------|
+| Sample mean | $\bar{x}$ |
+| Variance of the sample mean | $\sigma^2_{\bar{x}} = \frac{\sigma^2}{n}$ |
+| Standard error | $\sigma_{\bar{x}} = \frac{\sigma}{\sqrt(n)}$ |
 
 ****************************************************************
 ****************************************************************

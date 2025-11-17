@@ -144,7 +144,7 @@ hist(x,
      breaks = 100,
      col="skyblue",
      border = "white",
-     las = 1,
+     las = 1,   # display axis labels horizontally
      main=paste0("Sampling from a normal distribution",
                  "\n", # newline character
                  "n=", format(n, scientific = FALSE),
@@ -187,7 +187,12 @@ Jouez ensuite sur les paramètres pour évaluer leur impact sur la forme de la d
 n <- 100000
 my_min <- 10
 my_max <- 20
+
+
+## Draw random 0numbers
 x <- runif(n = n, min = my_min, max = my_max)
+
+## Plot the histogram
 hist(x, 
      breaks = 100,
      col="skyblue",
@@ -213,14 +218,21 @@ abline(v=(my_max + my_min)/2, lwd=2, col="brown") # Mark the mean
 
 ### Distribution chi carrée ($\chi^2$)
 
+Sur l'histogramme, nous marquons d'une ligne verticale la valeur des degrés de liberté. 
+
+
 ```{r sampling_chi2}
 
 # Plot a histogram of the generated numbers
 n <- 100000
 my_df <- 5
+
+## Draw random numbers in a chi2 distribution
 x <- rchisq(n = n, df = my_df)
+
+## Draw rthe histogram
 hist(x, 
-     breaks = 100,
+     breaks = 100,   ## increase the number of class intervals
      col="skyblue",
      border = "white",
      las = 1,
@@ -243,9 +255,14 @@ grid()
 # Plot a histogram of the generated numbers
 n <- 100000
 my_lambda <- 5
+
+## Generate te data by drawing random numbers
 x <- rpois(n = n, lambda = my_lambda)
+
+
+## Draw the histogram
 hist(x, 
-     breaks = -0.5:(max(x)+0.5),
+     breaks = -0.5:(max(x) + 0.5),
      col="skyblue",
      border = "white",
      las = 1,
@@ -274,16 +291,15 @@ Par convention, nous nommerons nos variables
 
 **Exercice**
 
-- Créez une matrice (`matrix()`) de `r=10000` lignes et `n=5` colonnes, que vous remplirez avec des nombres aléatoires tirés dans une distribution uniforme (`runif()`) entre $10$ et $20$. 
+- Créez une matrice (avec la fonction R `matrix()`) de `r=10000` lignes et `n=5` colonnes, que vous remplirez avec des nombres aléatoires tirés dans une distribution uniforme (`runif()`) entre $10$ et $20$. 
 
-- Calculez la moyenne marginale sur les lignes de cette matrice
+- Calculez la moyenne marginale sur les lignes de cette matrice au  moyen de la fonction `rowMeans()`, et stockez le résultat dans un vecteur nommé `sample_means`
 - Dessinez un histogramme avec les valeurs de ces moyennes marginales
-- Marquez d'une barre verticale la moyenne théorique
-- Dans une autre couleur, marquez d'une barre verticale la moyenne observée pour l'ensemble de vos tirages
-- Interprétez les résultats : quelle est la forme générale de la moyenne d'échantillonnage ? Ressemble-t-elle à la distribution théorique dont vous avez tiré les nombres ? Ressemble-t-elle à une autre distribution théorique que vous connaissez ?
+- Marquez d'une barre verticale la moyenne théorique $\mu$
+- Dans une autre couleur, marquez d'une barre verticale la moyenne observée pour l'ensemble de vos tirages $m$
+- Interprétez les résultats : quelle est la forme générale de la distribution d'échantillonnage de la moyehne ? Ressemble-t-elle à la distribution théorique dont vous avez tiré les nombres ? Ressemble-t-elle à une autre distribution théorique que vous connaissez ?
 
-
-```{r sampling_means_unif}
+```{r sampling_means_unif, fig.width=7, fig.height=5, out.width="80%", fig.cap="Distribution d'échantillonnage de la moyenne d'un tirage de 5 nombres dans une distribution uniforme. "}
 
 # Plot a histogram of the generated numbers
 r <- 100000     # repetitions
@@ -354,7 +370,7 @@ Quelle est la relation entre
 
 **Astuce: **pour automatiser l'analyse avec une série de valeurs de $n$, vous pouvez utiliser une boucle `for`. Le bloc de code ci-dessous contient déjà les paramètres et la boucle (vide), à vous d'y insérer le code pour résoudre l'exercice
 
-```{r sampling_means_unif_sample_size, message=FALSE}
+```{r sampling_means_unif_sample_size, fig.width=7, fig.height=5, out.width="80%", fig.cap="Impact de la taille d'échantillon sur la distribution d'échantillonnage de la moyenne. ", message=FALSE}
 
 # Plot a histogram of the generated numbers
 r <- 100000 # repetitions
