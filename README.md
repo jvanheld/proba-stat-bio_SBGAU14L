@@ -17,7 +17,9 @@ Supports du cours "Probabilités et statistiques pour la biologie" (SBGAU14L) en
 
 
 | Sujet | Tuto-exo | slides | 
-|--------------------------------|-----------------|---------------------|
-| Premiers pas avec R            |   | [01_intro-organisation_SSBGAU14_2025.pdf](slides/01_intro-organisation_SSBGAU14_2025.pdf) |
-| Apprivoiser les données : statistiques descriptives et exploratoires      | [data-exploration_exercises.Rmd](https://raw.githubusercontent.com/jvanheld/proba-stat-bio_SBGAU14L/refs/heads/main/tuto-exo/s2_statistiques-descriptives/data-exploration_exercises.Rmd) | [02_premiers-pas-avec-R.pdf](slides/02_premiers-pas-avec-R.pdf) |
-| Des populations aux échantillons et retour : échantillonnage et estimation  | [sampling_exercises.Rmd](https://raw.githubusercontent.com/jvanheld/proba-stat-bio_SBGAU14L/refs/heads/main/tuto-exo/s3_echantillonnage-et-estimation/sampling_exercises.Rmd) | [03_apprivoiser-vos-données.pdf](slides/03_apprivoiser-vos-données.pdf) |
+|--------------------------------|-----------------|-----------------------------|
+| Organisation du cours | | [01_intro-organisation_SSBGAU14_2025.pdf](slides/01_intro-organisation_SSBGAU14_2025.pdf) |
+| Premiers pas avec R |   | [02_premiers-pas-avec-R.pdf](slides/02_premiers-pas-avec-R.pdf)  |
+| Apprivoiser les données : statistiques descriptives et exploratoires      | [data-exploration_exercises.Rmd](https://raw.githubusercontent.com/jvanheld/proba-stat-bio_SBGAU14L/refs/heads/main/tuto-exo/s2_statistiques-descriptives/data-exploration_exercises.Rmd) |  [03_apprivoiser-vos-données.pdf](slides/03_apprivoiser-vos-données.pdf) |
+| Des populations aux échantillons et retour : échantillonnage et estimation  | [sampling_exercises.Rmd](https://raw.githubusercontent.com/jvanheld/proba-stat-bio_SBGAU14L/refs/heads/main/tuto-exo/s3_echantillonnage-et-estimation/sampling_exercises.Rmd) | [04_echantillonage-estimation.pdf](slides/04_echantillonage-estimation.pdf) |
+| Analyse différentielle de l'aboondance des protéines : test de comparaison de moyennes | [test_comparaison_moyennes_canale23_exercices.Rmd](https://raw.githubusercontent.com/jvanheld/proba-stat-bio_SBGAU14L/refs/heads/main/tuto-exo/s4_test-comparaison-de-moyennes/test_comparaison_moyennes_canale23_exercices.Rmd) | [05_test-comparaison-de-moyennes.pdf](slides/05_test-comparaison-de-moyennes.pdf) |
