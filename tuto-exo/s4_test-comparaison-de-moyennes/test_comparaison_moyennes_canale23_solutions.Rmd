@@ -189,7 +189,8 @@ sample_groups = read.delim(
   row.names=1)
 
 ## Load the protein names from a separate table
-protein_names = read.delim(file = file.path(data_dir, "canale_2023_protein-names.tsv"), sep = "\t")
+protein_names = read.delim(file = file.path(data_dir, "canale_2023_protein-names.tsv"), sep = "\t", row.names = 1, header = TRUE)
+# View(protein_names)
 ```
 
 The data and metadata files have been loaded in the following R variables. 
@@ -387,25 +388,161 @@ Notre exploration visuelle des données nous donne de bonnes raisons de penser q
 goi <- "UGP2" ## Gene of interest
 poi <- "Q16851" ## Protein of interest
 
-## Select the observations for the protein of interest
+## First writing for the t.test() : send 2 vectors of values (one per sample)
 
+## Select the observations for the protein of interest
 HCC_samples <- rownames(subset(sample_groups, group == "HCC"))
 liver_samples <- rownames(subset(sample_groups, group == "Liver"))
 
 HCC_values <-log2_LFQ[poi, HCC_samples]
 liver_values <-log2_LFQ[poi, liver_samples]
 
-welch_results <- t.test(
-  x = liver_values, y = HCC_values, 
+welch_result <- t.test(
+  x = HCC_values, y = liver_values, 
   alternative = "two.sided", 
   var.equal = FALSE)
-print(welch_results)
+print(welch_result)
+
+
+## Alternative call to the t.test() funciton: send a vector with all values, and another one with the group of each element
+values <- unlist(log2_LFQ[poi, ])
+group_labels <- unlist(sample_groups[colnames(log2_LFQ), "group"])
+
+welch_result <- t.test(
+  values ~ group_labels,
+  alternative = "two.sided", 
+  var.equal = FALSE)
+print(welch_result)
+
 
 ```
 
 
 ****************************************************************
 ## Analyse différentielle du protéome
+
+```{r welch_proteome}
+
+
+## Data filtering : filter out proteins having too few numeric values in one of the groups
+min_values_per_group <- 3
+
+## Count number of NA values per group for each protein
+n_HCC_per_prot <- apply(!is.na(log2_LFQ[, HCC_samples]), 1, sum)
+n_liver_per_prot <- apply(!is.na(log2_LFQ[, liver_samples]), 1, sum)
+
+# kable(table(n_HCC_per_prot > min_values_per_group, n_liver_per_prot > min_values_per_group))
+
+selected_proteins <- (n_HCC_per_prot > min_values_per_group) & (n_liver_per_prot > min_values_per_group)
+# table(selected_proteins)
+
+my_t <- function (x, y, ...) {
+ t_result <- t.test(x = x, y = y, ... )
+ t_result_list <- list(
+   t = t_result$statistic,
+   df = t_result$parameter,
+   p = t_result$p.value,
+   conf.int = t_result$conf.int,
+   t_result$estimate,
+   side = t_result$alternative,
+   method = t_result$method)
+ return(as.data.frame(t_result_list))
+}
+
+my_t <- function (values, groups, ...) {
+ t_result <- t.test(values ~ groups, ... )
+ t_result_vector <- c(
+   t = unname(t_result$statistic),
+   df = unname(t_result$parameter),
+   p = t_result$p.value,
+   conf.int = t_result$conf.int,
+   t_result$estimate,
+   d = unname(t_result$estimate[2] - t_result$estimate[1]))
+ return(t_result_vector)
+}
+
+
+
+## Compute a table with all the t-test results
+## One row per protein
+## One column per statistics
+proteome_t <- as.data.frame(t(apply(
+  log2_LFQ[selected_proteins,], 
+  1, my_t, 
+  group_labels,   
+  alternative = "two.sided", 
+  var.equal = FALSE)))
+
+## Add a column with the E-value
+proteome_t$E <- proteome_t$p * nrow(proteome_t)
+
+## Add a column with the protein name
+proteome_t$gene_name <- protein_names[rownames(proteome_t), "Gene.name"]
+proteome_t$protein_name <- protein_names[rownames(proteome_t), "Protein.name"]
+
+## Export the differential analysis results
+result_dir <- file.path(working_dir, "results")
+dir.create(result_dir, showWarnings = FALSE, recursive = TRUE)
+
+## Tab-separated values
+write.table(proteome_t, 
+            file = file.path(result_dir, "proteome_differential_analysis.tsv"),
+            sep = "\t", row.names = TRUE, col.names = NA)
+
+## Excel file
+if (!require(xlsx)) {
+  install.packages("xlsx")
+}
+library(xlsx)
+write.xlsx(x = proteome_t, file = file.path(result_dir, "proteome_differential_analysis.xlsx"))
+
+```
+
+#### Volcano plot
+
+```{r volcano_plot, fig.width=10, fig.height=10, out.width="90%", fig.cap="Volcano plot of the proteome differential analysis. "}
+#### Volcano plot ####
+y <- -log10(proteome_t$p)
+plot(proteome_t$d, 
+     y, 
+     main = "Volcano plot of the proteome differential analysis\nCanale (2023)",
+     xlab = "Effect size = m(Liver) - m(HCC)",
+     ylab = "-log10(P-value)",
+     col = densCols(proteome_t$d, y),
+     las =  1,
+     panel.first = grid())
+abline(v=0, col="darkgrey")
+abline(h=0, col="darkgrey")
+
+## Thresholds on effect size and significance
+threshold_d <- 2    ## Threshold on effect size (=log2(FC))
+threshold_E <- 0.05 ## Conservative Bonferoni threshold
+
+N <- nrow(proteome_t)
+abline(h = -log10(threshold_E), col="violet")
+abline(h = -log10(threshold_E/N), col="darkgreen")
+abline(h = log10(N), col="brown")
+abline(v = c(-threshold_d, +threshold_d), col="darkgreen")
+
+## Recolor significant proteins
+selected_up <- rownames(subset(proteome_t, (E < threshold_E) & (d > threshold_d))) 
+selected_down <- rownames(subset(proteome_t, (E < threshold_E) & (d < -threshold_d))) ## Conservative Bonferoni threshold
+lines(proteome_t[selected_up, "d"], 
+      -log10(proteome_t[selected_up, "p"]), 
+      type = "p", pch=20, col = "#00AA00", cex=0.5)
+lines(proteome_t[selected_down, "d"], 
+      -log10(proteome_t[selected_down, "p"]), 
+      type = "p", pch=20, col = "red", cex=0.5)
+
+
+## Add a label to the top most significant proteins
+to_label_n <- 12
+to_label <- proteome_t[order(proteome_t$p), ][1:to_label_n, ]
+text(x = to_label$d,
+     y = -log10(to_label$p) - 0.4, 
+     labels = to_label$gene_name, cex = 0.7)
+
+```
 
 
 
