@@ -332,6 +332,7 @@ abline(a = 0, b = 1, col = "brown", lwd=2)
 ```
 
 
+
 ****************************************************************
 ## Moyenne versus écart-type
 
@@ -375,6 +376,40 @@ grid() ## Add a grid
 abline(a = 0, b = 1, col = "brown", lwd=2)
 
 ```
+
+
+
+****************************************************************
+## Réalisation d'un test de comparaison de moyennes
+
+Notre exploration visuelle des données nous donne de bonnes raisons de penser que .... hétéroscédasticité --> test de Welch
+
+
+```{r welch_one_protein}
+goi <- "UGP2" ## Gene of interest
+poi <- "Q16851" ## Protein of interest
+
+## Select the observations for the protein of interest
+
+HCC_samples <- rownames(subset(sample_groups, group == "HCC"))
+liver_samples <- rownames(subset(sample_groups, group == "Liver"))
+
+HCC_values <-log2_LFQ[poi, HCC_samples]
+liver_values <-log2_LFQ[poi, liver_samples]
+
+welch_results <- t.test(
+  x = liver_values, y = HCC_values, 
+  alternative = "two.sided", 
+  var.equal = FALSE)
+print(welch_results)
+
+```
+
+
+**Interprétation**
+
+****************************************************************
+## Analyse différentielle du protéome
 
 
 
