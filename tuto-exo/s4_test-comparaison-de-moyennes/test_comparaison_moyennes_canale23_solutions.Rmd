@@ -82,6 +82,8 @@ options(scipen = 12) ## Max number of digits for non-scientific notation
 ```
 
 
+
+
 ## But de ce TP
 
 Le but de ce TP est de mettre en oeuvre un test $t$ de Student pour comparer les moyennes des niveaux d'abondance du protéome, entre deux types de tissus: 

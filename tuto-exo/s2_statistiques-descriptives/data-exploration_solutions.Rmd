@@ -2,9 +2,10 @@
 title: "Tuto-TP – Apprivoiser ses données – statistiques descriptives et exploratoires"
 author: "Jacques van Helden (ORCID [0000-0002-8799-8584](https://orcid.org/0000-0002-8799-8584))"
 date: '`r Sys.Date()`'
+subtitle: Proba/stat pour la biologie (SBGAU14L)
 output:
   html_document:
-    self_contained: TRUE
+    self_contained: yes
     fig_caption: yes
     highlight: zenburn
     theme: cerulean
@@ -66,12 +67,6 @@ output:
     fig_height: 5
     fig_width: 7
     toc: yes
-font-import: http://fonts.googleapis.com/css?family=Risque
-subtitle: Proba/stat pour la biologie (SBGAU14L)
-font-family: Garamond
-transition: linear
-editor_options: 
-  chunk_output_type: console
 ---
 
 
@@ -141,7 +136,7 @@ dir.create(working_dir, recursive = TRUE, showWarnings = FALSE)
 setwd(working_dir)
 message("Working directory: ", working_dir)
 
-#### Check data dieectory and create it if necessary ####
+#### Check data directory and create it if necessary ####
 data_dir <- file.path(working_dir, "data")
 dir.create(data_dir, recursive = TRUE, showWarnings = FALSE)
 message("Data directory: ", data_dir)

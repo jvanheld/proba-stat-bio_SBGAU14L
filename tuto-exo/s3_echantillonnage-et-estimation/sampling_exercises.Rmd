@@ -4,6 +4,7 @@ author: "Votre Nom"
 date: "`r Sys.Date()`"
 output:
   html_document:
+    self_contained: yes
     code_folding: hide
     collapsed: yes
     fig_caption: yes
@@ -18,6 +19,7 @@ output:
     toc: yes
     toc_depth: 3
   html_notebook:
+    self_contained: yes
     code_folding: show
     collapsed: no
     fig_caption: yes
@@ -102,8 +104,8 @@ hist(x,
      main=paste0("Sampling from a normal distribution",
                  "\n", # newline character
                  "n=", format(n, scientific = FALSE),
-                 ", m=", mu,
-                 ", s=", sigma),
+                 ", mu=", mu,
+                 ", sigma=", sigma),
      xlab="Value")
 
 ```
@@ -141,8 +143,8 @@ hist(x,
      main=paste0("Sampling from a normal distribution",
                  "\n", # newline character
                  "n=", format(n, scientific = FALSE),
-                 ", m=", mu,
-                 ", s=", sigma))
+                 ", mu=", mu,
+                 ", sigma=", sigma))
 
 
 
@@ -196,9 +198,7 @@ my_df <- 5
 
 ### Distribution de Poisson
 
-Astuces : 
-
-- Pour la distribution Poisson, utilisez des intervalles de classe séparés par des pas de 1, allant de -0.5 jusqu'à $x_{max}+0.5$, où $x_{max}$ est le maximum des valeurs de $x$ obtenues dans votre tirage aléatoire. Pour cela, utilisez les fonctions `seq()`, `max()`. 
+**Astuces : ** pour la distribution Poisson, utilisez des intervalles de classe séparés par des pas de 1, allant de -0.5 jusqu'à $x_{max}+0.5$, où $x_{max}$ est le maximum des valeurs de $x$ obtenues dans votre tirage aléatoire. Pour cela, utilisez les fonctions `seq()`, `max()`. 
 
 
 ```{r sampling_poisson}
@@ -238,8 +238,7 @@ Par convention, nous nommerons nos variables
 
 ### Exercice 4: impact de la taille d'échantillon
 
-
-- Refaites l'expérience ci-dessus en maintenant le même nombre de répétitions ($r$), mais en faisant varier la taille d'échantillon $n$, qui prendra successivement les valeurs 1, 2, 4, 8, 16, 32, 64
+Refaites l'expérience ci-dessus en maintenant le même nombre de répétitions ($r$), mais en faisant varier la taille d'échantillon $n$, qui prendra successivement les valeurs $1$, $2$, $4$, $8$, $16$, $32$, $64$.
 
 Pour chaque valeur de $n$, 
 
