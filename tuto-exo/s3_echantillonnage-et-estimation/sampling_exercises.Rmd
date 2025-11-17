@@ -293,23 +293,22 @@ my_max <- 20    # max of the uniform distribution
 
 ****************************************************************
 
-## Exercice 4: impact de la taille d'échantillon
+## Démo 4: impact de la taille d'échantillon
 
 
-Refaites l'expérience ci-dessus en maintenant le même nombre de répétitions ($r=`r r`$), mais en faisant varier la taille d'échantillon $n$, qui prendra successivement les valeurs $1$, $2$, $4$, $8$, $16$, $32$, $64$.
+Nous fournissons ci-dessous le code pour refaire le calcul de la moyenne d'échantillon,  en maintenant le même nombre de répétitions ($r=`r r`$), mais en faisant varier la taille d'échantillon $n$, qui prendra successivement les valeurs $1$, $2$, $4$, $8$, $16$, $32$, $64$.
+
+**Astuce: ** pour automatiser l'analyse avec une série de valeurs de $n$, vous nous utilisons une boucle `for`. 
+
+Le bloc de code ci-dessous contient la solution. 
+
 
 Pour chaque valeur de $n$, 
 
-- dessinez un histogramme, 
-- calculez la moyenne (`mean()` la variance (`var()`) et l'écart-type (`sd()`) des moyennes d'échantillons
-
-Quelle est la relation entre
-
-- la taille de l'échantillon et la variance de sa moyenne ?
-- la taille de l'échantillon et l'écart-type de sa moyenne ?
+- nous dessinons l'histogramme, 
+- nous calculons la moyenne (`mean()` la variance (`var()`) et l'écart-type (`sd()`) des moyennes d'échantillons
 
 
-**Astuce: **pour automatiser l'analyse avec une série de valeurs de $n$, vous pouvez utiliser une boucle `for`. Le bloc de code ci-dessous contient déjà les paramètres et la boucle (vide), à vous d'y insérer le code pour résoudre l'exercice
 
 ```{r sampling_means_unif_sample_size, fig.width=7, fig.height=5, out.width="80%", fig.cap="Impact de la taille d'échantillon sur la distribution d'échantillonnage de la moyenne. ", message=FALSE}
 
@@ -407,24 +406,18 @@ kable(
 ```
 
 
+Interprétez le résultat : quelle est la relation entre
+
+- la taille de l'échantillon et la variance de sa moyenne ?
+- la taille de l'échantillon et l'écart-type de sa moyenne ?
+
 
 
 
 ```{r impact_sample_size_var_of_means}
 ## Plot the variance of sampling means as a function of sample size
-plot(n_values, means_var_values, 
-     type = "b",
-     pch = 19,
-     lty = "dashed",
-     col = "brown",
-     main = "Impact of sample size on the variance of sampling means",
-     ylim = c(0, ceiling(max(means_var_values))),
-     ylab = paste0("Variance of the sampling mean (", r, " repetitions)"),
-     xlab = "Sample size (n)",
-     las = 1,
-     panel.first = c(grid(),
-                     abline(h=0, col="black"))
-     )
+
+### A VOUS DE JOUER ###
 
 
 ```
@@ -432,18 +425,8 @@ plot(n_values, means_var_values,
 
 ```{r impact_sample_size_var_of_means_logX}
 ## Plot the variance of sampling means as a function of sample size
-plot(n_values, means_var_values, 
-     type = "b",
-     pch = 19,
-     lty = "dashed",
-     col = "brown",
-     log = "xy",
-     main = "Impact of sample size on the variance of sampling means\n(logarithmic X and Y scales)",
-     ylab = paste0("Variance of the sampling mean (", r, " repetitions)"),
-     xlab = "Sample size (n)",
-     las = 1,
-     panel.first = c(grid(, equilogs = FALSE))
-     )
+
+### A VOUS DE JOUER ###
 
 
 ```
@@ -453,19 +436,8 @@ plot(n_values, means_var_values,
 
 ```{r impact_sample_size_sd_of_means}
 ## Plot the standard deviation of sampling means as a function of sample size
-plot(n_values, means_sd_values, 
-     type = "b",
-     pch = 19,
-     lty = "dashed",
-     col = "brown",
-     main = "Impact of sample size on the standard deviation of sampling means",
-     ylim = c(0, ceiling(max(means_sd_values))),
-     ylab = paste0("Standard deviation of the sampling mean (", r, " repetitions)"),
-     xlab = "Sample size (n)",
-     las = 1,
-     panel.first = c(grid(),
-                     abline(h=0, col="black"))
-     )
+
+### A VOUS DE JOUER ###
 
 
 ```
@@ -473,31 +445,9 @@ plot(n_values, means_sd_values,
 
 ```{r impact_sample_size_mean_of_means}
 ## Plot the mean of sampling means as a function of sample size
-plot(n_values, means_m_values, 
-     type = "p",
-     pch = 19,
-     lty = "solid",
-     col = "orange",
-     main = "Impact of sample size on the distribution of sampling means",
-     ylim = c(my_min, my_max), 
-     ylab = paste0("Mean of the sampling mean (", r, " repetitions)"),
-     xlab = "Sample size (n)", 
-     las = 1,
-     panel.first = c(grid(),
-                     abline(h = mu, col = "blue", lwd = 1))
-     )
 
+### A VOUS DE JOUER ###
 
-arrows(x0 = n_values, x1 = n_values, 
-       y0 = means_m_values - means_sd_values,  y1 = means_m_values + means_sd_values, 
-       code = 3, length = 0.07, lwd=2, 
-       col="brown") ## Mark an interval of ± 1 standard deviation around the mean
-legend("topright",
-       legend = c("mu", "mean of the means", "standard deviation of the means"),
-       lwd = c(1, 0, 2),
-       pch=c(NA, 19, NA),
-       col = c("blue", "orange", "brown")
-)
 
 ```
 
