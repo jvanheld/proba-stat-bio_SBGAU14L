@@ -228,10 +228,14 @@ Pour cela nous allons utiliser la table de métadonnées `sample_groups`.
 - Utilisez la fonction R `densCols()` pour indiquer les régions où se superposent un grand nombre de points
 
 
-```{r plot_meanper_group, fig.width=8, fig.height=8, out.width="90%", fig.cap="Sample means per tissue type. HCC: Hepatocarcinome cells. "}
+```{r plot_mean_per_group, fig.width=8, fig.height=8, out.width="90%", fig.cap="Sample means per tissue type. HCC: Hepatocarcinome cells. "}
 ## Select the sample labels for the two tissue types
 liver_samples <- rownames(subset(sample_groups, group=="Liver"))
 HCC_samples <- rownames(subset(sample_groups, group=="HCC"))
+
+## Compute the sample size per group
+n_liver <- length(liver_samples)
+n_HCC <- length(HCC_samples)
 
 ## Extract two subsets of the proteome abundance table, corresponding to the two tissue table
 log2_LFQ_liver <- log2_LFQ[, liver_samples]
@@ -240,8 +244,11 @@ log2_LFQ_HCC <- log2_LFQ[, HCC_samples]
 # dim(log2_LFQ_HCC)
 
 ## Compute marginal means per protein for each tissue type
-mean_per_protein_liver <- apply(log2_LFQ_liver, 1, sum, na.rm=TRUE)
-mean_per_protein_HCC <- apply(log2_LFQ_HCC, 1, sum, na.rm=TRUE)
+mean_per_protein_liver <- apply(log2_LFQ_liver, 1, mean, na.rm = TRUE)
+mean_per_protein_HCC <- apply(log2_LFQ_HCC, 1, mean, na.rm = TRUE)
+
+mean_min = floor(min(mean_per_protein_liver, mean_per_protein_HCC, na.rm = TRUE))
+mean_max = ceiling(max(mean_per_protein_liver, mean_per_protein_HCC, na.rm = TRUE))
 
 ## Scatter plot of the means per group
 plot(mean_per_protein_liver, 
@@ -249,9 +256,118 @@ plot(mean_per_protein_liver,
      col=densCols(
        x = mean_per_protein_liver, 
        y = mean_per_protein_HCC),
-     main = "Mean abundance per protein",
+     main = "Mean abundance per protein: Liver versus HCC",
      xlab = "mean(log2_LFQ), liver", 
      ylab = "mean(log2_LFQ), HCC", 
+     xlib=c(mean_min, mean_min),
+     ylib=c(mean_min, mean_min),
+     las=1)
+grid() ## Add a grid
+abline(a = 0, b = 1, col = "brown", lwd=2)
+
+```
+
+****************************************************************
+## Variances par tissu
+
+
+**Exercice : ** suivez la même procédure pour produire un graphique représentant les variances marginales par protéine, pour les tissus HCC et Liver. 
+
+```{r plot_var_per_group, fig.width=8, fig.height=8, out.width="90%", fig.cap="Standard deviation per tissue type. HCC: Hepatocarcinome cells. "}
+
+## Compute marginal variances per protein for each tissue type
+var_per_protein_liver <- apply(log2_LFQ_liver, 1, var, na.rm=TRUE) * sqrt((n_liver -1 ) /n_liver)
+var_per_protein_HCC <- apply(log2_LFQ_HCC, 1, var, na.rm=TRUE) * sqrt((n_HCC -1 ) /n_HCC)
+
+var_max <- ceiling(max(var_per_protein_liver, var_per_protein_HCC, na.rm = TRUE))
+
+## Scatter plot of the variances per group
+plot(var_per_protein_liver, 
+     var_per_protein_HCC, 
+     main = "Standard deviation of the abundance per protein: Liver versus HCC",
+     xlab = "var(log2_LFQ), liver", 
+     ylab = "var(log2_LFQ), HCC", 
+     xlim = c(0, var_max),
+     ylim=c(0, var_max),
+     col=densCols(
+       x = var_per_protein_liver, 
+       y = var_per_protein_HCC),
+     las=1)
+grid() ## Add a grid
+abline(a = 0, b = 1, col = "brown", lwd=2)
+
+```
+
+****************************************************************
+## Ecarts-types par tissu
+
+
+**Exercice : ** suivez la même procédure pour produire un graphique représentant les écarts-types marginaux par protéine, pour les tissus HCC et Liver. 
+
+```{r plot_sd_per_group, fig.width=8, fig.height=8, out.width="90%", fig.cap="Standard deviation per tissue type. HCC: Hepatocarcinome cells. "}
+
+## Compute marginal standard deviations per protein for each tissue type
+sd_per_protein_liver <- apply(log2_LFQ_liver, 1, sd, na.rm=TRUE) * sqrt((n_liver -1 ) /n_liver)
+sd_per_protein_HCC <- apply(log2_LFQ_HCC, 1, sd, na.rm=TRUE) * sqrt((n_HCC -1 ) /n_HCC)
+
+sd_max <- ceiling(max(sd_per_protein_liver, sd_per_protein_HCC, na.rm = TRUE))
+
+## Scatter plot of the standard deviations per group
+plot(sd_per_protein_liver, 
+     sd_per_protein_HCC, 
+     main = "Standard deviation of the abundance per protein: Liver versus HCC",
+     xlab = "sd(log2_LFQ), liver", 
+     ylab = "sd(log2_LFQ), HCC", 
+     xlim = c(0, sd_max),
+     ylim=c(0, sd_max),
+     col=densCols(
+       x = sd_per_protein_liver, 
+       y = sd_per_protein_HCC),
+     las=1)
+grid() ## Add a grid
+abline(a = 0, b = 1, col = "brown", lwd=2)
+
+```
+
+
+****************************************************************
+## Moyenne versus écart-type
+
+**Exercice : ** pour chaque type de tissu, dessinez un graphique de type nuage de points, avec en abscisse la moyenne et en ordonnée l'écart-type 
+
+```{r mean_vs_sd_liver, fig.width=8, fig.height=8, out.width="90%", fig.cap="Mean versus standard deviation in liver samples. "}
+
+## Scatter plot of the mean versus standard deviation
+plot(mean_per_protein_liver, 
+     sd_per_protein_liver, 
+     main = "Standard deviation versus mean of the abundance per protein in liver tissue",
+     xlab = "mean(log2_LFQ), liver", 
+     ylab = "sd(log2_LFQ), mean", 
+     xlim = c(mean_min, mean_max),
+     ylim=c(0, sd_max),
+     col=densCols(
+       x = sd_per_protein_liver, 
+       y = sd_per_protein_HCC),
+     las=1)
+grid() ## Add a grid
+abline(a = 0, b = 1, col = "brown", lwd=2)
+
+```
+
+
+```{r mean_vs_sd_HCC, fig.width=8, fig.height=8, out.width="90%", fig.cap="Mean versus standard deviation in HCC samples. "}
+
+## Scatter plot of the mean versus standard deviation
+plot(mean_per_protein_HCC, 
+     sd_per_protein_HCC, 
+     main = "Standard deviation versus mean of the abundance per protein in HCC tissue",
+     xlab = "mean(log2_LFQ), HCC", 
+     ylab = "sd(log2_LFQ), mean", 
+     xlim = c(mean_min, mean_max),
+     ylim=c(0, sd_max),
+     col=densCols(
+       x = sd_per_protein_HCC, 
+       y = sd_per_protein_HCC),
      las=1)
 grid() ## Add a grid
 abline(a = 0, b = 1, col = "brown", lwd=2)
