@@ -4,7 +4,7 @@ author: "Jacques van Helden (ORCID [0000-0002-8799-8584](https://orcid.org/0000-
 date: "`r Sys.Date()`"
 output:
   html_document:
-    self_contained: no
+    self_contained: yes
     code_folding: hide
     collapsed: true
     fig_caption: true
@@ -140,24 +140,10 @@ sigma <- 5      # Standard deviation of the normal distribution
 x <- rnorm(n = n, mean = mu, sd = sigma)
 
 # Plot a histogram of the generated numbers
-hist(x, 
-     breaks = 100,
-     col="skyblue",
-     border = "white",
-     las = 1,   # display axis labels horizontally
-     main=paste0("Sampling from a normal distribution",
-                 "\n", # newline character
-                 "n=", format(n, scientific = FALSE),
-                 ", mu=", mu,
-                 ", sigma=", sigma))
 
 
-abline(v=mu, lwd=2, col="brown") ## mark the mean
-arrows(x0 = mu - sigma, x1 = mu + sigma, 
-       y0 = n / 100,  y1 = n/100, 
-       code = 3, length = 0.1, lwd=2, 
-       col="brown") ## Mark an interval of ± 1 standard deviation around the mean
-grid() ## Add a grid
+### A VOUS DE JOUER
+
 
 ```
 
@@ -193,25 +179,8 @@ my_max <- 20
 x <- runif(n = n, min = my_min, max = my_max)
 
 ## Plot the histogram
-hist(x, 
-     breaks = 100,
-     col="skyblue",
-     border = "white",
-     las = 1,
-     xlim=c(my_min, my_max), # define the limits of X axis to ensure consistency
-     main=paste0("Sampling from a uniform distribution",
-                 "\n", # newline character
-                 "n=", format(n, scientific = FALSE),
-                "; min=", my_min,
-                "; max=", my_max))
-## manually add a vertical grid 
-abline(v=seq(from = my_min, 
-             to = my_max, 
-             length.out=11), 
-       col = "darkgrey") 
-abline(v=c(my_min, my_max), lwd=2, col="blue") # Mark the limits
-abline(v=(my_max + my_min)/2, lwd=2, col="brown") # Mark the mean
 
+### A VOUS DE JOUER ###
 
 ```
 
@@ -228,20 +197,13 @@ n <- 100000
 my_df <- 5
 
 ## Draw random numbers in a chi2 distribution
-x <- rchisq(n = n, df = my_df)
+
+### A VOUS DE JOUER ###
 
 ## Draw rthe histogram
-hist(x, 
-     breaks = 100,   ## increase the number of class intervals
-     col="skyblue",
-     border = "white",
-     las = 1,
-     main=paste0("Sampling from a chi-squared distribution",
-                 "\n", # newline character
-                 "n=", format(n, scientific = FALSE),
-                ", df=", my_df))
-abline(v=my_df, lwd=2, col="brown")
-grid()
+
+### A VOUS DE JOUER ###
+
 
 ```
 
@@ -257,21 +219,13 @@ n <- 100000
 my_lambda <- 5
 
 ## Generate te data by drawing random numbers
-x <- rpois(n = n, lambda = my_lambda)
+
+### A VOUS DE JOUER ###
 
 
 ## Draw the histogram
-hist(x, 
-     breaks = -0.5:(max(x) + 0.5),
-     col="skyblue",
-     border = "white",
-     las = 1,
-     main=paste0("Sampling from a Poisson distribution",
-                 "\n", # newline character
-                 "n=", format(n, scientific = FALSE),
-                ", lambda=", my_lambda))
-abline(v=my_lambda, lwd=2, col="brown")
-grid()
+
+### A VOUS DE JOUER ###
 
 ```
 
@@ -296,8 +250,14 @@ Par convention, nous nommerons nos variables
 - Calculez la moyenne marginale sur les lignes de cette matrice au  moyen de la fonction `rowMeans()`, et stockez le résultat dans un vecteur nommé `sample_means`
 - Dessinez un histogramme avec les valeurs de ces moyennes marginales
 - Marquez d'une barre verticale la moyenne théorique $\mu$
-- Dans une autre couleur, marquez d'une barre verticale la moyenne observée pour l'ensemble de vos tirages $m$
-- Interprétez les résultats : quelle est la forme générale de la distribution d'échantillonnage de la moyehne ? Ressemble-t-elle à la distribution théorique dont vous avez tiré les nombres ? Ressemble-t-elle à une autre distribution théorique que vous connaissez ?
+- Dans une autre couleur, marquez d'une barre verticale la moyenne des moyennes d'échantillon (nom de variable: `means_m`)
+
+Interprétez les résultats : 
+
+- Quelle est la forme générale de la distribution d'échantillonnage de la moyenne ?
+- Ressemble-t-elle à la distribution théorique dont vous avez tiré les nombres ? 
+- Ressemble-t-elle à une autre distribution théorique que vous connaissez ?
+- La moyenne des moyennes d'échantillon correspond-elle à la moyenne théorique ?
 
 
 ```{r sampling_means_unif, fig.width=7, fig.height=5, out.width="80%", fig.cap="Distribution d'échantillonnage de la moyenne d'un tirage de 5 nombres dans une distribution uniforme. "}
@@ -309,44 +269,24 @@ my_min <- 10    # min of the uniform distribution
 my_max <- 20    # max of the uniform distribution
 
 ## Draw random numbers 
-x <- runif(n = n * r, min = my_min, max = my_max)
+
+### A VOUS DE JOUER ###
 
 ## Inject the numbers in a matrix with r rows and n columns
-x_matrix <- matrix(data = x, nrow = r, ncol = n)
+
+### A VOUS DE JOUER ###
 
 ## Compute sample means
-sample_means <- apply(X = x_matrix, MARGIN = 1, FUN = mean)
 
-## Compute some statistics about the sample means
-means_m <- mean(sample_means) # compute the mean of the sample means
-means_sd <- sd(sample_means) # compute the standard deviation of the sample means
+### A VOUS DE JOUER ###
+
+## Compute the mean and standard deviation of the sample means
+
+### A VOUS DE JOUER ###
 
 ## Draw a histogram
-hist(sample_means, 
-     breaks = 100,
-     col="lightgreen",
-     border = "white",
-     las = 1,
-     xlim=c(my_min, my_max), # define the limits of X axis to ensure consistency
-     main=paste0("Sampling mean from a uniform distribution",
-                 "\n", # newline character
-                 "r=", format(r, scientific = FALSE),
-                 "; n=", format(n, scientific = FALSE),
-                 "; min=", my_min,
-                 "; max=", my_max))
 
-abline(v=seq(from = my_min, 
-             to = my_max, 
-             length.out=11), 
-       col = "darkgrey") ## manually add a vertical grid 
-abline(v=c(my_min, my_max), lwd=2, col="blue") # Mark the limits
-abline(v=(my_max + my_min)/2, lwd=2, col="brown") # Mark the mean
-
-arrow_height <- r/100 # a bit tricky but suitable
-arrows(x0 = means_m - means_sd, x1 = means_m + means_sd, 
-       y0 = arrow_height,  y1 = arrow_height, 
-       code = 3, length = 0.1, lwd=2, 
-       col="brown") ## Mark an interval of ± 1 standard deviation around the sample mean
+### A VOUS DE JOUER ###
 
 
 ```
