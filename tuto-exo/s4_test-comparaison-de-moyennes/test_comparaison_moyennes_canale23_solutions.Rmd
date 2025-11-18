@@ -436,19 +436,8 @@ n_liver_per_prot <- apply(!is.na(log2_LFQ[, liver_samples]), 1, sum)
 selected_proteins <- (n_HCC_per_prot > min_values_per_group) & (n_liver_per_prot > min_values_per_group)
 # table(selected_proteins)
 
-my_t <- function (x, y, ...) {
- t_result <- t.test(x = x, y = y, ... )
- t_result_list <- list(
-   t = t_result$statistic,
-   df = t_result$parameter,
-   p = t_result$p.value,
-   conf.int = t_result$conf.int,
-   t_result$estimate,
-   side = t_result$alternative,
-   method = t_result$method)
- return(as.data.frame(t_result_list))
-}
-
+## Define a function that runs a t test and returns the quantitative results as a vector.
+## This enables to use it with apply() in order to run the t test on each row of a omics data table.
 my_t <- function (values, groups, ...) {
  t_result <- t.test(values ~ groups, ... )
  t_result_vector <- c(
@@ -456,16 +445,17 @@ my_t <- function (values, groups, ...) {
    df = unname(t_result$parameter),
    p = t_result$p.value,
    conf.int = t_result$conf.int,
-   t_result$estimate,
-   d = unname(t_result$estimate[2] - t_result$estimate[1]))
+   xbar_1 = unname(t_result$estimate[1]),
+   xbar_2 = unname(t_result$estimate[2]),
+   t_result$estimate[1],
+   M = unname(t_result$estimate[1] - t_result$estimate[2]),
+   A = unname(t_result$estimate[1] + t_result$estimate[2])/2)
  return(t_result_vector)
 }
 
 
-
-## Compute a table with all the t-test results
-## One row per protein
-## One column per statistics
+## Compute a table with all the t-test results. 
+## This returns a data frame with one row per protein and one column per statistics. 
 proteome_t <- as.data.frame(t(apply(
   log2_LFQ[selected_proteins,], 
   1, my_t, 
@@ -473,12 +463,21 @@ proteome_t <- as.data.frame(t(apply(
   alternative = "two.sided", 
   var.equal = FALSE)))
 
-## Add a column with the E-value
-proteome_t$E <- proteome_t$p * nrow(proteome_t)
+## Re-compute the t statistics for checking
 
+### TO DO JvH ###
+
+
+## Add a column with the E-value
+proteome_t$E <- proteome_t$p * nrow(proteome_t)  ## E-value
+proteome_t$sig <- -log10(proteome_t$E)    ## Significance
+  
 ## Add a column with the protein name
 proteome_t$gene_name <- protein_names[rownames(proteome_t), "Gene.name"]
 proteome_t$protein_name <- protein_names[rownames(proteome_t), "Protein.name"]
+
+# View(proteome_t)
+# plot(proteome_t$M, proteome_t$t)
 
 ## Export the differential analysis results
 result_dir <- file.path(working_dir, "results")
@@ -498,40 +497,49 @@ write.xlsx(x = proteome_t, file = file.path(result_dir, "proteome_differential_a
 
 ```
 
-#### Volcano plot
 
-```{r volcano_plot, fig.width=10, fig.height=10, out.width="90%", fig.cap="Volcano plot of the proteome differential analysis. "}
-#### Volcano plot ####
-y <- -log10(proteome_t$p)
-plot(proteome_t$d, 
-     y, 
-     main = "Volcano plot of the proteome differential analysis\nCanale (2023)",
-     xlab = "Effect size = m(Liver) - m(HCC)",
-     ylab = "-log10(P-value)",
-     col = densCols(proteome_t$d, y),
+### Taille d'effet (*effect size*)
+
+La taille d'effet est la différence entre les moyennes des échantillons. Dans notre cas, il s'agit d'une différence entre deux logarithmes, ce qui revient à calculer un ***log2 fold change*** entre les LFQ des deux tissus. 
+
+$$
+d = \log_2(\text{LFQ}_{\text{liver}}) - \log_2(\text{LFQ}_{\text{HCC}})
+= \log_2\!\left(\frac{\text{LFQ}_{\text{liver}}}{\text{LFQ}_{\text{HCC}}}\right)
+$$
+
+### MA plot
+
+Le "MA" plot revient à dessiner la taille d'effet (***effect size***) en ordonnée en fonction de l'intensité moyenne du signal (abscisse). 
+
+$$M = d = log_2(\bar{x}_1) - log_2(\bar{x}_2)$$
+$$A = \frac{1}{2} \left[log_2(\bar{x}_1) + log_2(\bar{x}_2) \right] $$
+
+
+
+```{r MA_plot, fig.width=8, fig.height=7, out.width="100%", fig.cap="MA plot of the proteome differential analysis. "}
+#### MA plot ####
+plot(proteome_t$A, 
+     proteome_t$M, 
+     main = "MA-plot of the proteome differential analysis\nCanale (2023)",
+     xlab = "Average signal (A)",
+     ylab = "Difference (M)",
+     col = densCols(proteome_t$A, proteome_t$M),
      las =  1,
      panel.first = grid())
-abline(v=0, col="darkgrey")
 abline(h=0, col="darkgrey")
 
 ## Thresholds on effect size and significance
-threshold_d <- 2    ## Threshold on effect size (=log2(FC))
-threshold_E <- 0.05 ## Conservative Bonferoni threshold
-
-N <- nrow(proteome_t)
-abline(h = -log10(threshold_E), col="violet")
-abline(h = -log10(threshold_E/N), col="darkgreen")
-abline(h = log10(N), col="brown")
-abline(v = c(-threshold_d, +threshold_d), col="darkgreen")
+threshold_M <- 2    ## Threshold on effect size (=log2(FC))
+abline(h = c(-threshold_M, +threshold_M), col="darkgreen")
 
 ## Recolor significant proteins
-selected_up <- rownames(subset(proteome_t, (E < threshold_E) & (d > threshold_d))) 
-selected_down <- rownames(subset(proteome_t, (E < threshold_E) & (d < -threshold_d))) ## Conservative Bonferoni threshold
-lines(proteome_t[selected_up, "d"], 
-      -log10(proteome_t[selected_up, "p"]), 
+selected_up <- rownames(subset(proteome_t, M > threshold_M))
+selected_down <- rownames(subset(proteome_t, M < -threshold_M))
+lines(proteome_t[selected_up, "A"],
+      proteome_t[selected_up, "M"],
       type = "p", pch=20, col = "#00AA00", cex=0.5)
-lines(proteome_t[selected_down, "d"], 
-      -log10(proteome_t[selected_down, "p"]), 
+lines(proteome_t[selected_down, "A"],
+      proteome_t[selected_down, "M"],
       type = "p", pch=20, col = "red", cex=0.5)
 
 
@@ -539,6 +547,58 @@ lines(proteome_t[selected_down, "d"],
 to_label_n <- 12
 to_label <- proteome_t[order(proteome_t$p), ][1:to_label_n, ]
 text(x = to_label$d,
+     y = -log10(to_label$p) - 0.4, 
+     labels = to_label$gene_name, cex = 0.7)
+
+```
+
+
+On this graph, we arbitrarily marked a threshold of 2 on the absolute log2 fold change, which amounts to a fold-change of 4 in any direction between liver and HCC samples. 
+
+
+### Volcano plot
+
+Le volcano plot est utilisé pour visualiser les résultats d'un grand ensemebl de tests statistiques, en représentant la significativité de chaque test ($-log_{10}(P)$) en fonction de la taille d'effet ($d$). 
+
+```{r volcano_plot, fig.width=8, fig.height=7, out.width="100%", fig.cap="Volcano plot of the proteome differential analysis. "}
+#### Volcano plot ####
+y <- -log10(proteome_t$p)
+plot(proteome_t$M, 
+     y, 
+     main = "Volcano plot of the proteome differential analysis\nCanale (2023)",
+     xlab = "Effect size (liver - HCC)",
+     ylab = "-log10(P-value)",
+     col = densCols(proteome_t$M, y),
+     las =  1,
+     panel.first = grid())
+abline(v=0, col="darkgrey")
+abline(h=0, col="darkgrey")
+
+## Thresholds on effect size and significance
+threshold_M <- 2    ## Threshold on effect size (=log2(FC))
+threshold_E <- 0.05 ## Conservative Bonferoni threshold
+
+N <- nrow(proteome_t)
+abline(h = -log10(threshold_E), col="violet")
+abline(h = -log10(threshold_E/N), col="darkgreen")
+abline(h = log10(N), col="brown")
+abline(v = c(-threshold_M, +threshold_M), col="darkgreen")
+
+## Recolor significant proteins
+selected_up <- rownames(subset(proteome_t, (E < threshold_E) & (M > threshold_M))) 
+selected_down <- rownames(subset(proteome_t, (E < threshold_E) & (M < -threshold_M))) ## Conservative Bonferoni threshold
+lines(proteome_t[selected_up, "M"], 
+      -log10(proteome_t[selected_up, "p"]), 
+      type = "p", pch=20, col = "#00AA00", cex=0.5)
+lines(proteome_t[selected_down, "M"], 
+      -log10(proteome_t[selected_down, "p"]), 
+      type = "p", pch=20, col = "red", cex=0.5)
+
+
+## Add a label to the top most significant proteins
+to_label_n <- 12
+to_label <- proteome_t[order(proteome_t$p), ][1:to_label_n, ]
+text(x = to_label$M,
      y = -log10(to_label$p) - 0.4, 
      labels = to_label$gene_name, cex = 0.7)
 
