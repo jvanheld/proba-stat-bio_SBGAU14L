@@ -571,4 +571,55 @@ legend("topright",
 | Standard error | $\sigma_{\bar{x}} = \frac{\sigma}{\sqrt(n)}$ |
 
 ****************************************************************
+
+## Distribution d'échantillonnage de la variance
+
+Nous calculons ici la distribution d'échantillonnage de la variance en tirant des nombres aléatoires dans une distribution normale. 
+
+
+
+```{r variance_sampling_distribution, fig.width=7, fig.height=5, out.width="80%"}
+#### Sampling distribution of the variance ####
+
+## Parameters
+r <- 100000
+n_values <- c(2, 3, 4, 5, 6, 8, 16, 32, 64)
+mu <- 50
+sigma <- 5
+
+## Draw random numbers in a normal distribution
+x_table <- matrix(data = rnorm(n = r * n, mean = mu, sd = sigma), 
+            nrow = r, ncol = max(n_values))
+
+for (n in n_values) {
+  x <- x_table[, 1:n]
+  sample_mean <- rowMeans(x)
+  x_centred <- sweep(x, 1, sample_mean, "-")
+  sample_var <- apply(x_centred^2, 1, mean) 
+#  sample_var2 <- apply(x, 1, var) * (n-1) / n ## Suppress the automatic correction in order to obtain the sample variance
+  hist(sample_var, breaks = 100, col = "#FFDD00", border="white", panel.first=grid(),
+       main = paste0("Sampling variance distribution\nn =", n, "; rnorm(m=", mu, ", sd=", sigma, "); r=", r),
+       xlab = "Sample variance", 
+       xlim = c(0, ceiling(max(sample_var))),
+       las=1)
+  abline(v=sigma^2, col="blue", lwd=1)
+  abline(v=mean(sample_var), col="seagreen3", lwd=2)
+  
+  legend(
+    "topright",
+    legend = c(
+      bquote(sigma^2 == .(sigma^2)),
+      bquote(bar(s^2) == .(round(x = mean(sample_var), digits = 2)))
+    ),
+    col = c("blue", "seagreen3"),
+    lwd = c(2, 2),
+    bty = "white"
+  )
+  
+
+}
+```
+
+
+
 ****************************************************************
