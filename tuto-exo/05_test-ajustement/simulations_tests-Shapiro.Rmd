@@ -1,0 +1,158 @@
+---
+title: "Simulations empiriques : puissance du test de Shapiro"
+author: "Jacques van Helden (ORCID [0000-0002-8799-8584](https://orcid.org/0000-0002-8799-8584))"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    self_contained: no
+    code_folding: hide
+    collapsed: true
+    fig_caption: true
+    highlight: zenburn
+    theme: cerulean
+    toc: true
+    toc_depth: 3
+    toc_float: true
+  pdf_document:
+    fig_caption: true
+    highlight: zenburn
+    toc: true
+    toc_depth: 3
+  html_notebook:
+    self_contained: yes
+    code_folding: show
+    collapsed: false
+    fig_caption: true
+    highlight: zenburn
+    theme: cerulean
+    toc: true
+    toc_depth: 3
+    toc_float: true
+  word_document:
+    toc: true
+    toc_depth: '3'
+editor_options:
+  chunk_output_type: console
+---
+
+
+
+```{r settings, include=FALSE, echo=FALSE, eval=TRUE}
+library(knitr)
+
+options(width = 300)
+# options(encoding = 'UTF-8')
+knitr::opts_chunk$set(
+  fig.width = 7, fig.height = 5, 
+  fig.path = 'figures/adjustment_',
+  fig.align = "center", 
+  size = "tiny", 
+  echo = TRUE, 
+  eval = TRUE, 
+  warning = FALSE, 
+  message = FALSE, 
+  results = TRUE, 
+  comment = "")
+
+options(scipen = 12) ## Max number of digits for non-scientific notation
+# knitr::asis_output("\\footnotesize")
+
+```
+
+## Simulations `rnorm()` ($H_0$) versus `runif()` ($H_1$)
+
+
+```{r fig.width=8, fig.height=10, out.width="100%", results='asis'}
+## Since our statistical  samples are quite small (~25 biological samples per group), 
+## we should wonder if the Shapiro-Wilk test has a sufficient power 
+## (power is the capability to reject the null hypothesis when it is false). 
+## 
+## To evaluate this, we run an empirical experiment : 
+## we draw a sample of 25 random numbers in a uniform distribution, and we run a Shapiro-Wikl test
+## 
+## We repat the experiment 99 times to evaluate the fluctuations of the Shapiro-Wilk test result. 
+repeats <- 1000
+n_values <- c(10, 25, 50, 75, 100)
+
+message("Testing normality with random numbers from uniform distribution")
+
+for (n in n_values) {
+  
+  cat("\n\n## $n=$", n, "\n\n")
+  
+  ## Vector to collect Shapiro p-values for all the simulations under H0
+  shapiro_pvalues_under_H0 <- vector() 
+  ## Vector to collect Shapiro p-values for all the simulations under H1
+  shapiro_pvalues_under_H1 <- vector()
+  
+  par(mfrow=c(3,2))
+  for (i in 1:repeats) {
+
+    
+    ### Run a simulation under H1
+    rand_norm <- rnorm(n)
+    shapiro_result <- shapiro.test(rand_norm)
+    p_rnorm <- shapiro_result$p.value
+    shapiro_pvalues_under_H0 <- c(shapiro_pvalues_under_H0, p_rnorm)
+    
+    if (i <= 3) {
+      qqnorm(rand_norm, main = paste0(
+        "Random normal, ", 
+        "n = ", n, 
+        "; p = ", signif(p_rnorm, digits=3)))
+      grid()
+      qqline(rand_norm)
+    }
+    
+    ### Run a simulation under H1
+    rand_unif <- runif(n)
+    shapiro_result <- shapiro.test(rand_unif)
+    p_runif <- shapiro_result$p.value
+    shapiro_pvalues_under_H1 <- c(shapiro_pvalues_under_H1, p_runif)
+    
+    if (i <= 3) {
+      qqnorm(rand_unif, main = paste0(
+        "Random uniform, ",
+        "n = ", n, 
+        "; p = ", signif(p_runif, digits=3)))
+      grid()
+      qqline(rand_unif)
+    }
+  }
+  
+  n_rejected_H1 <- sum(shapiro_pvalues_under_H1 < 0.05)
+  n_accepted_H1 <- sum(shapiro_pvalues_under_H1 >= 0.05)
+  n_rejected_H0 <- sum(shapiro_pvalues_under_H0 < 0.05)
+  n_accepted_H0 <- sum(shapiro_pvalues_under_H0 >= 0.05)
+  power <- n_rejected_H1 / repeats
+  
+  par(mfrow=c(2,1))
+
+  ## Histogram of P-values under H0
+  hist(shapiro_pvalues_under_H0, 
+       breaks=seq(0,1,0.05),
+       col = c("red", rep("skyblue", 19)), 
+       border="white", 
+       main = paste0("Shapiro-Wilk p-values with runif() samples", 
+                     "\n", "n = ", n,  "; ", repeats, " repeats", 
+                     "; Power = ", power) 
+  )
+  abline(h=repeats/20, col="blue", lwd=2, lty="dashed")
+  
+  ## Histogram of P-values under H1
+  hist(shapiro_pvalues_under_H1, 
+       breaks=seq(0,1,0.05),
+       col = c("#00BB00", rep("orange", 19)), 
+       border="white", 
+       main = paste0("Shapiro-Wilk p-values with runif() samples", 
+                     "\n", "n = ", n,  "; ", repeats, " repeats", 
+                     "; Power = ", power) 
+  )
+  abline(h=repeats/20, col="blue", lwd=2, lty="dashed")
+  par(mfrow=c(1,1))
+  
+}
+
+
+```
+
