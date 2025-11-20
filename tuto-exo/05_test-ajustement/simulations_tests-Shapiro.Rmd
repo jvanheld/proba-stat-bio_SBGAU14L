@@ -99,9 +99,11 @@ for (n in n_values) {
       qqnorm(rand_norm, main = paste0(
         "Random normal, ", 
         "n = ", n, 
-        "; p = ", signif(p_rnorm, digits=3)))
+        "; p = ", signif(p_rnorm, digits=3)),
+        col = "skyblue"
+      )
       grid()
-      qqline(rand_norm)
+      qqline(rand_norm, col = "skyblue")
     }
     
     ### Run a simulation under H1
@@ -114,9 +116,11 @@ for (n in n_values) {
       qqnorm(rand_unif, main = paste0(
         "Random uniform, ",
         "n = ", n, 
-        "; p = ", signif(p_runif, digits=3)))
+        "; p = ", signif(p_runif, digits=3)),
+        col = "#00BB00"
+      )
       grid()
-      qqline(rand_unif)
+      qqline(rand_unif, col = "#00BB00")
     }
   }
   
