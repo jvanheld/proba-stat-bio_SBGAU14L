@@ -1,0 +1,652 @@
+---
+title: 'Tuto et TP: tests de comparaison de moyenne'
+author: "Jacques van Helden (ORCID [0000-0002-8799-8584](https://orcid.org/0000-0002-8799-8584))"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    code_folding: hide
+    fig_caption: yes
+    highlight: zenburn
+    theme: cerulean
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_document:
+    fig_caption: yes
+    highlight: zenburn
+    toc: yes
+    toc_depth: 3
+  ioslides_presentation:
+    colortheme: dolphin
+    fig_caption: yes
+    fig_height: 6
+    fig_width: 7
+    fonttheme: structurebold
+    highlight: tango
+    incremental: no
+    keep_md: no
+    smaller: yes
+    theme: cerulean
+    toc: yes
+    widescreen: yes
+  beamer_presentation:
+    colortheme: dolphin
+    fig_caption: yes
+    fig_height: 6
+    fig_width: 7
+    fonttheme: structurebold
+    highlight: tango
+    incremental: no
+    keep_tex: no
+    slide_level: 2
+    theme: Montpellier
+    toc: yes
+  slidy_presentation:
+    fig_caption: yes
+    fig_height: 6
+    fig_width: 7
+    highlight: tango
+    incremental: no
+    keep_md: no
+    smaller: yes
+    theme: cerulean
+    toc: yes
+    toc_float: yes
+    widescreen: yes
+  word_document:
+    toc: yes
+    toc_depth: 3
+---
+
+```{r settings, include=FALSE, echo=FALSE, eval=TRUE}
+library(knitr)
+
+options(width = 300)
+# options(encoding = 'UTF-8')
+knitr::opts_chunk$set(
+  fig.width = 7, fig.height = 5, 
+  fig.path = 'figures/canale23_',
+  fig.align = "center", 
+  size = "tiny", 
+  echo = TRUE, 
+  eval = TRUE, 
+  warning = FALSE, 
+  message = FALSE, 
+  results = TRUE, 
+  comment = "")
+
+options(scipen = 12) ## Max number of digits for non-scientific notation
+# knitr::asis_output("\\footnotesize")
+
+```
+
+
+## But de ce TP
+
+```{r echo=FALSE}
+## Parameters for the exercise
+replicates <- 10000     ## Number of replicates
+alpha <- 0.05  ## Accepted risk for type I error
+```
+
+Au cours de ce TP nous effectuerons des tests de comparaison de moyennes sur deux types de données. 
+
+1. **Données artificielles** générées selon des distributions normales, soit sous hypothèse nulle ($H_0$) soit sous hypothèse alternative ($H_1$).  Ceci nous permettra de réaliser des tests dans des situations où nous maîtrisons les  paramètres des populations à comparer ($\mu_1$, $\mu_2$, $\sigma_1$, $\sigma_2$), en connaissant donc la réponse correcte du test (rejet ou acceptation de l'hypothèse nulle). Le but de ce tutoriel sera de :
+
+    - nous familiariser avec les tests de comparaison de moyenne: choix d'un test en fonction des caractéristiques des données, choix des paramètres du test, interprétation des résultats; 
+    - évaluer l'adéquation des tests en fonction des types de données;
+    - mesurer empiriquement les taux d'erreurs de types I et II, et vérifier s'ils correspondent aux attentes théoriques.
+
+2. **Données de protéome** : article de Canale et al. (2023, DOI [10.1016/j.xgen.2023.100331](https://doi.org/10.1016/j.xgen.2023.100331)). Le but de cette analyse sera de détecter les protéines dont l'abondance estdiffère significativement entre deux types de tissus : foie (liver) et hépatocarcinome cellulaire (HCC). 
+
+****************************************
+## Jeux de données artificielles
+
+Pour les jeux de données artificiels, nous poserons arbitrairement un seuil $\alpha = `r alpha`$ sur le risque d'erreur de première espèce. 
+
+### Sous hypothèse nulle
+
+Dans un premier temps, nous allons délibérément générer des données sous hypothèse nulle ($H_0$) c'est-à-dire en tirant des échantillons dans deux populations de taille égale. Les données seront générées dans les **conditions d'applicabilité du test de Student** (***hypothèses de travail***, c'est-à-dore hypothèses préalables à la réalisation du test): les 2 populations dont les échantillons sont extraits sont supposées:
+
+1. suivre des distributions normales (hypothèse de normalité);
+2. avoir des variances identques (hypothèse d'homoscédasticité). 
+
+Le but de l'exercice sera de mesurer le **taux de faux posiitfs**, c'est-à-dire la proportion des tests déclarés (à tort) positifs, alors qu'il n'existe pas de différence entre les moyennes des deux populations.
+
+#### Génération des données
+
+Dans un premier temps, nous travaillerons sous $H_0$, c'est-à-dire en tirant des nombres aléatoires dans deux populations de moyennes égales ($\mu_1 = \mu_2$). 
+
+Ces deux populations auront par aileurs des variances égales ($\sigma_1^2 = \sigma_2^2$). Nous sommes donc dans des conditions d'*homoscédasticité*, qui nous permettent d'appliquer le **test t de Student** (en cas d'*hétéroscédasticité* nous devrions recourir à la variante de Welch du test t). 
+
+Au moyen de la fonction `rnorm()`, nous tirons deux échantillons de taille égale ($n_1 = n_2 = 10$) à partir de populations normales de moyennes égales ($\mu_1 = \mu_2 = 7$) et d'écart-types égaux ($\sigma_1 = \sigma_2 = 2$). 
+
+```{r random_numbers}
+#### Population parameters ####
+n1 <- 10     ## Taille du premier échantillon
+n2 <- 10     ## Taille du second échantillojn
+mu1 <- 7     ## Moyenne de la 1ere population
+mu2 <- 7     ## Moyenne de la 2eme population
+sigma1 <- 2  ## Ecart-type de la 1ere population
+sigma2 <- 2  ## Ecart-type de la 2eme population
+
+## On tire des échantillons des deux populations respectives
+x1 <- rnorm(n = n1, mean = mu1, sd = sigma1)
+x2 <- rnorm(n = n2, mean = mu2, sd = sigma2)
+```
+
+
+#### Attention aux fonctions var() et sd()
+
+**Exercice: ** Nous calculons maintenant 
+
+- les moyennes des deux échantillons ($\bar{x_1}$, $\bar{x_2}$),
+- les écart-types ($s_1$, $s_2$) des échantillons. Calculez-les de façon explicite, en utilisant les fonctions `sum()`et `sqrt()` et sans recourir à la fonction R `sd()`
+- les estimateurs des moyennes et écarts-types des populations ($\hat{\mu}_1$, $\hat{\mu}_2$, $\hat{\sigma}_1$, $\hat{\sigma}_1$)
+
+Pour cela, nous utilisons deux approches successives : 
+
+- utiliser les fonctions R `sum()` et `sqrt()`
+- utiliser la fonction R `sd()`
+
+```{r mean_and_sd}
+## Moyennes d'échantillons
+m1 <- mean(x1)
+m2 <- mean(x2)
+
+## Ecarts-types d'échantillons
+s1 <- sqrt(sum((x1 - m1)^2)/n1)
+s2 <- sqrt(sum((x2 - m2)^2)/n2)
+
+
+## Estimateurs de moyennes des populations
+mu1_est <- m1
+mu2_est <- m2
+
+## Estimateurs des écarts-types d'échantillons
+sigma1_est <- sqrt(sum((x1 - m1)^2)/(n1-1))
+sigma2_est <- sqrt(sum((x2 - m2)^2)/(n2-1))
+
+
+## Vérification : la fonction sd() ne retourne pas l'écart-type de l'échantillon : 
+## elle retourne un estimateur de l'écart-type de la population
+kable(
+  data.frame(matrix(ncol=4, nrow=2, c(
+    1, 2,
+    s1, s2,
+    sigma1_est, sigma2_est, 
+    sd(x1), sd(x2))
+  )), 
+  col.names = c("sample", "s", "sigma_est", "sd() result"))
+
+```
+
+
+On constate que la fonction `sd()` ne retourne pas l'écart-type de l'échantillon ($s$), mais bien l'**estimation de l'écart-type de la population** ($\hat{s} = \sqrt{\frac{n}{n-1}}\bar{x}$). 
+
+Il en va de même pour la fonction R `var()`, qui ne retourne pas la variance des données fournies (variance d'échantillon), mais bien une **estimation de la variance de la population** calculé sur base de ces données. 
+
+
+#### Test de Student : `t.test()`
+
+
+Sur base des deux échantillons précédents, nous effectuons un test de comparaison de moyennes en utilisant la fonction `t.test()`. 
+
+Nous choisissons les paramètres en tenant compte des caractéristiques de vos données. 
+Nous effectuerons ici un **test bilatéral** (*two-tailed*), sous hypothèse d'*homoscédasticité* (variances égales). 
+
+
+```{r}
+
+#### Réalisation du test de Student ####
+
+## Utilisation de la fonction t.test() pour réaliser le test de Student
+ttest_result <- t.test(x1, x2, 
+       var.equal = TRUE,  ## On postule les variances égales
+       alternative = "two.sided", ## Test bilatéral
+       conf.level = 1 - alpha ## Niveau de confiance
+       )
+
+## Imprimer le rapport du test de Student
+print(ttest_result)
+
+## Récupérer les informations dans un vecteur nommé
+kable(c("Statistics: t " = unname(ttest_result$statistic), ## statistique de Student calculée
+        "Parameter: df " = unname(ttest_result$parameter),         ## paramètre de la distribution de Student (degrés de liberté)
+        "P-value " = ttest_result$p.value), 
+      col.names = "value")
+
+```
+
+
+
+### Calcul manuel des statistiques de Student
+
+Au moyen de la fonction R `sum()`, nous calculons les paramètres d'échantillons nécessaires au test de Student ($\bar{x}_1, \bar{x}_2, s_1, s_2$). 
+
+```{r sample_parameters}
+#### Réalisation manuelle du test de Student ####
+
+n1 <- length(x1) ## Taille d'échantillon
+m1 <- sum(x1) / n1 ## Moenne du premier échantillon
+s1 <- sqrt(sum((x1 - m1)^2)/n1) ## Ecart-type du premier échantillon
+
+## Idem pour le second échantillon
+n2 <- length(x2) 
+m2 <- sum(x2) / n2
+s2 <- sqrt(sum((x2 - m2)^2)/n2)
+
+## Afficher les paramètres des échantillons
+kable(
+  data.frame(matrix(ncol=4, nrow=2, c(
+    1, 2,
+    n1, n2, 
+    round(digits=2, m1), round(digits=2, m2),
+    round(digits=2, s1), round(digits=2, s2)
+  ))), 
+  col.names = c("sample", "n", "m", "s"))
+
+```
+
+
+Au moyen de cette même fonction `sum()`, nous estimons les paramètres des populations  ($\hat{\mu}_1, \hat{\mu}_2, \hat{\sigma}_1, \hat{\sigma}_2$).
+
+```{r}
+## Estimation des moyennes de population
+mu1_est <- m1
+mu2_est <- m2
+
+## Estimation des écarts-types
+sigma1_est <- s1 * sqrt(n1/(n1-1))
+sigma2_est <- s2 * sqrt(n2/(n2-1))
+
+## Afficher les paramètres estimés pour la population
+kable(
+  data.frame(matrix(ncol=3, nrow=2, c(
+    1, 2,
+    round(digits=2, mu1_est), round(digits=2, mu2_est),
+    round(digits=3, sigma1_est), round(digits=3, sigma2_est)
+  ))), 
+  col.names = c("population", "$\\hat{\\mu}$", "$\\hat{\\sigma}$"))
+
+#cat("mu1_est = ", round(digits=2, mu1_est), "sigma1_est", round(digits=3, sigma1_est))
+#cat("mu2_est = ", round(digits=2, mu2_est), "sigma2_est", round(digits=3, sigma2_est))
+
+
+```
+
+
+Pour vérification, nous recalculons maintenant ces paramètres au moyen des fonctions R `mean()` et `sd()`.
+
+```{r}
+#### Calcul des estimateurs au moyen des fonctions R mean() et sd() ####
+mean1 <- mean(x1)
+mean2 <- mean(x2)
+sd1 <- sd(x1)
+sd2 <- sd(x2)
+
+## Afficher les paramètres estimés pour la population
+kable(
+  data.frame(matrix(ncol=3, nrow=2, c(
+    1, 2,
+    round(digits=2, mean1), round(digits=2, mean2),
+    round(digits=3, sd1), round(digits=3, sd2)
+  ))), 
+  col.names = c("fonctions R", "`mean()`", "`sd()`"))
+
+#cat("mean1 = ", round(digits=2, mean1), "sd1", round(digits=2, sd1))
+#cat("mean2 = ", round(digits=2, mean2), "sd2", round(digits=2, sd2))
+
+## Print the result for the knitr report
+result <- t(data.frame(
+  "moyennes de populations" = c(mu1, mu2),
+  "moyennes d'échantillons" = c(m1, m2),
+  "moyennes estimées" = c(mu1_est, mu2_est),
+  "écarts-types de population" = c(sigma1, sigma2),
+  "écarts-types d'échantillons" = c(s1, s2),
+  "écarts-types estimés" = c(sigma1_est, sigma2_est)))
+colnames(result) <- c("Population 1", "Population 2")
+
+kable(as.data.frame(result), digits = 2, caption = "Estimation des paramètres de centralité (moyenne) et dispersion (écart-type) des populations à partir des échantillons. ")
+
+
+```
+
+
+**A retenir**, les fonctions R `var()` et `sd()` ne calculent pas les paramètres d'échantillons ($s^2$, $s$) mais les estimateurs des paramètres de population  correspondants ($\hat{\sigma}^2$, $\hat{\sigma}$). 
+
+#### Statistique $t_{\text{obs}}$
+
+Sur base de ces paramètres, nous calculons ci-dessous la statistique $t_{\text{S}}$ de Student. 
+
+Comme nous travaillons avec des populations de **variances égales** et avec des **échantillons de tailles égales**, nous utilisons la formule du test t de Student. 
+
+$$t_{S} = \frac{\hat{\delta}}{\hat{\sigma}_\delta} =  \frac{\bar{x}_{2} - \bar{x}_{1}}{\sqrt{\frac{n_1 s_{1}^2 + n_2 s_{2}^2}{n_1+n_2-2} \left(\frac{1}{n_1}+ \frac{1}{n_2}\right)}}$$
+
+```{r}
+
+## Difference between sample means
+diff <- m1 - m2
+
+## Estimation of the standard error on the difference between sample means
+Student.diff.err <- sqrt((1/n1 + 1/n2) * (n1 * s1^2 + n2 * s2^2) / (n1 + n2 - 2))
+
+## Student statistics
+Student.t <- diff / Student.diff.err
+
+
+## Print Student statistics with 5 significant digits
+cat("Student statistics  t =", signif(digits=5, Student.t))
+
+```
+
+
+### Calcul de la p-valeur de cette statistique $t$
+
+Nous utilisons la la fonction $pt()$ pour calculer la P-valeur de la statistique $t$. 
+
+- Le nom=bre de degrés de liberté est $\text{df} = n_1 + n_2 -2$. 
+- Comme nous effectuons un test bilatéral, nous calculons le risque de première espèce des deux côtés de la distribution théorique $t$ : $\alpha = P(T \ge |t|) + P(T \le -|t|) = 2 \cdot P(T \ge |t|)$
+
+
+```{r}
+#### Calcul de la P-valeur ####
+Student.df <- n1 + n2 - 2
+Student.p <- 2 * pt(q = abs(Student.t), df = Student.df, lower.tail = FALSE)
+
+## Affichage du résultat
+cat("Student P-value  t =", signif(digits=5, Student.p))
+
+## Comparaison du résultat de la fonction t.test() et du calcul manuel
+kable(
+  data.frame(matrix(ncol=4, nrow=2, c(
+    "`t.test()`", "Calcul manuel",
+    ttest_result$parameter, Student.df, 
+    round(digits=2, ttest_result$statistic), round(digits=2, Student.t), 
+    signif(digits=5, ttest_result$p.value), signif(digits=5, Student.p)
+  ))), 
+  col.names = c("méthode de calcul", "df", "$t$", "$p$"))
+
+ttest_result$p.value
+
+```
+
+
+f. Interprétez les résultats (décision, interprétation de la p-valeur). 
+
+
+### Mesure empirique du taux de faux-positifs
+
+
+Dans cet exercice, nous allons réaliser un grand nombre de tests de Student en nous plaçant sous hypothèse nulle, et compter le nombre de tests retournant une réponse positive. 
+
+a. Avant de commencer l'expérience, indiquez le nombre de faux positifs attendus *a prior* si l'one ffectue $R = `r replicates`$ tests sous hypothèse nulle, avec un seuil critique de $\alpha= `r  alpha`$.
+
+```{r exp_FP}
+## Expected number of false positives
+exp_fp <- replicates * alpha
+```
+
+
+$$E(\text{FP}) = R \cdot \alpha = `r replicates` \cdot `r alpha` = `r replicates * alpha`$$
+
+b. Répétez `r replicates` fois le test de Student au moyen de la fonction `t.test()` et récupérez dans deux vecteurs séparés les valeurs rapportées pour la statistique $t$ et pour la $p$ valeur. 
+
+
+```{r one_test_function}
+
+#' Effectue un test t (Student ou Welch) sur deux échantillons simulés
+#'
+#' Cette fonction génère deux échantillons indépendants selon des lois normales
+#' de paramètres spécifiés, puis effectue automatiquement :
+#' \itemize{
+#'   \item un test t de Student si les écarts-types sont égaux ;
+#'   \item un test t de Welch si les écarts-types diffèrent.
+#' }
+#'
+#' La fonction renvoie la statistique de test t ainsi que la valeur p.
+#'
+#' @param n1 Taille de l'échantillon 1.
+#' @param n2 Taille de l'échantillon 2.
+#' @param m1 Moyenne de la population 1.
+#' @param m2 Moyenne de la population 2.
+#' @param s1 Écart-type de la population 1.
+#' @param s2 Écart-type de la population 2.
+#'
+#' @return Un vecteur numérique nommé de longueur 2 :
+#' \describe{
+#'   \item{t}{La statistique du test.}
+#'   \item{p}{La valeur p associée.}
+#' }
+#'
+#' @examples
+#' # Écarts-types égaux → Student
+#' one_test(10, 10, 7, 7, 2, 2)
+#'
+#' # Écarts-types différents → Welch
+#' one_test(10, 10, 7, 7, 2, 4)
+#'
+#' @export
+one_test <- function(n1, n2, m1, m2, s1, s2) {
+  
+  # Échantillons simulés
+  x1 <- rnorm(n1, mean = m1, sd = s1)
+  x2 <- rnorm(n2, mean = m2, sd = s2)
+  
+  # Choix automatique du test
+  equal_var <- (s1 == s2)
+  
+  ttest <- t.test(x1, x2, var.equal = equal_var)
+  
+  c(t = ttest$statistic, p = ttest$p.value)
+}
+```
+
+
+```{r ttest_simul_H0}
+#### Replicate the t test ####
+
+## Parameterss
+n1 = 10
+n2 = 10
+m1 = 7
+m2 = 7
+s1 = 2
+s2 = 2
+
+## Replications of the t test
+results_H0 <- data.frame(t(replicate(
+  n = replicates, 
+  expr = one_test(n1 = n1, n2 = m2, m1 = m1, m2 = m2, s1 = s1, s2 = s2))))
+colnames(results_H0) <- c("t", "p")
+# head(results_H0)
+```
+
+
+c. Dessinez l'histogramme des valeurs $t$ obtenues empiriquement.
+
+```{r hist_t_under_H0, fig.width=7, fig.height=8, out.width="90%", fig.cap="Dstribution of the observed t statistics in 10 000 replicates of a Student test under H0. "}
+
+#### plot the histograms of t statistics and P-values in the simulated t-tests under H0 ####
+ttest_histograms <- function (ttest_results,
+                              col_t_obs = "#DDBBFF",
+                              col_t_mean = "orange",
+                              col_t_fit = "blue",
+                              col_p_pos = "#BB0000",
+                              col_p_neg = "skyblue",
+                              col_p_exp  = "blue") {
+  
+  par(mfrow=c(2,1))
+  ## Hstogram of observed t statistics
+  t_hist <- hist(ttest_results$t, breaks = 100, 
+                 main = "Observed t statistics",
+                 xlab = "t",
+                 col = col_t_obs, 
+                 border="white",
+                 las = 1)
+  grid()
+  abline(v = mean(ttest_results$t), col = col_t_mean, lwd = 3, lty="dashed")
+  
+  ## Fit a Student density function over the observed t statistics
+  x <- t_hist$mids
+  n_breaks <- length(t_hist$breaks) ## Number of class intervals in the histogram
+  w <- t_hist$breaks[2:n_breaks] - t_hist$breaks[1:(n_breaks - 1)]
+  y <- dt(x = t_hist$mids - mean(ttest_results$t), df = n1 + n2 - 2) * replicates * w
+  lines(x = x, y = y, col = col_t_fit)
+  
+  legend("topright", 
+         legend = c("obs t freq", 
+                    "mean(obs t)",
+                    "fitted t dens"),
+         col = c(col_t_obs, col_t_mean, col_t_fit),
+         lwd = c(4, 3, 1),
+         lty = c("solid", "dashed", "solid"),
+         cex==0.7)
+  
+  legend("topleft", 
+         legend = c(
+           paste0("replicates=", replicates),
+           paste0("n1=", n1),
+           paste0("n2=", n2),
+           paste0("m1=", m1),
+           paste0("m1=", m1),
+           paste0("s1=", s1),
+           paste0("s1=", s1)
+         ), bty = "n",
+         cex = 0.7)
+  
+  sum(t_hist$counts)
+  
+  ## Hstogram of t-test P-values
+  p_hist <- hist(ttest_results$p, 
+                 breaks = seq(from = 0, to = 1, by = 0.05), 
+                 main = "T test P-values",
+                 xlab = "P-value",
+                 col = c(col_p_pos, rep(length.out = 19, col_p_neg)), border="white",
+                 las = 1)
+  grid()
+  abline(h = replicates / 20, col = col_p_exp, lwd = 2, lty = "dashed")
+  
+  par(mfrow=c(1,1))
+}
+
+ttest_histograms(ttest_results = results_H0, col_p_pos = "#BB0000", col_p_neg = "skyblue")
+
+
+```
+
+
+d. Calculez la proportion de faux-positifs. Cette proportion correspond-elle à vos attentes ?
+
+```{r}
+n_FP <- sum(results_H0$p < alpha)
+```
+
+Nous observons `r n_FP` faux-positifs, alors que nous en attendons `r exp_fp` sous $H_0$. 
+
+
+## Test sous hypothèse alternative
+
+Effectuez $R = `r replicates`$ tests de comparaison de moyenne sur des échantillons aléatoires de tailles égales ($n_1 = n_2 = 10$) tirés dans des populations de moyennes respectives $\mu_1 = 6$ et $\mu_2= 8$, ayant toutes deux un écart-type $\sigma=2$. 
+
+
+a. Choisissez le test et ses paramètres en fonction des caractéristiqus de vos données. 
+
+Nous sommes sous hypothèse d'homoscédasticité, nous pouvons dont utiliser le test t de Student. 
+
+
+```{r ttest_simul_H1}
+#### Replicate the t test ####
+
+## Parameterss
+n1 = 10
+n2 = 10
+m1 = 6
+m2 = 8
+s1 = 2
+s2 = 2
+
+## Replications of the t test
+results_H1 <- data.frame(t(replicate(
+  n = replicates, 
+  expr = one_test(n1 = n1, n2 = m2, m1 = m1, m2 = m2, s1 = s1, s2 = s2))))
+colnames(results_H1) <- c("t", "p")
+# head(results_H1)
+```
+
+```{r hist_t_under_H1, fig.width=7, fig.height=8, out.width="90%", fig.cap="Dstribution of the observed t statistics in 10 000 replicates of a Student test under H1. "}
+
+ttest_histograms(ttest_results = results_H1, col_p_pos = "orange", col_p_neg = "#00BB00")
+
+```
+
+
+b. Comptez le nombre de résultats déclarés positifs et négatifs avec un seuil $\alpha = `r alpha`$.
+
+
+```{r}
+#### Calcul de la puissance du test
+
+n_pos <- sum(results_H1$p <= alpha)
+n_neg <- sum(results_H1$p > alpha)
+ttest_power <- n_neg / replicates
+
+```
+
+
+
+c. Interprétez ce résultat.
+
+Dans ce test, nous sommes sous hypothèse alternative ($H_1$), le résultat correct est donc le rejet de l'hypothèse nulle ($R(H_0)$). Au terme des `r replicates` répétition de la simulation avec des nombres aléatoires, le test t déclare `r n_pos` tests positifs, et `r n_neg` tests négatifs. 
+
+Nous pouvons en dériver une mesure empirique de la **puissance du test**, en calculant la proportion de résultats de tests négatifs parmi l'ensemble des tests réalisés. 
+
+$$\text{Power} = \frac{\text{FN}}{\text{TP} + \text{FN}} =  \frac{`r n_neg`}{`r n_pos` + `r n_neg`} = `r ttest_power`$$
+
+
+## Test avec variances inégales
+
+Effectuez les mêmes tests (`r replicates` répliques, d'abord sous hypothèse nulle puis sous hypothèse alternative) avec des données tirées de population de variances inégales: $\sigma_1^2 = 4$, $\sigma_2^2 = 25$. 
+
+a. Justiifez le choix du test et des paramètres. 
+
+b. Comptez le nombre de résultats déclarés positifs ou négatifs.
+
+c. Interprétez le résultat. 
+
+## Test avec données non-normales
+
+Au moyen de la fonction R `rpois()`, générez des données selon une loi de Poisson dont l'espérance vaut $\lambda_1 = 4$ pour la première population et $\lambda_2 = 6$ pour la seconde. 
+
+a. Choisissez le test approprié.
+
+b. Mesurez les proportions de tests respectivement déclarés positifs et négatifs. 
+
+c. Sur ces mêmes données, effectuez un test paramétrique de comparaison de moyennes (Student ou Welch, à vous de choisi en le justifiant). 
+
+d. Interprétez le résultat. 
+
+
+
+****************************************
+## Formules mathématiques
+
+- Les symboles grecs ($\mu$, $\sigma$) correspondent aux statistiques de population, les symboles romains ($\bar{x}$, $s$) aux statistiques d'échantillon.
+- L'accent circonflexe ($\hat{ }$) indique les estimateurs de paramètres de population calculés à partir de paramètres d'échantillons. 
+
+| Symbol       | Description   |
+|--------------|----------------------------------------------------|
+| $\mu_{1},  \mu_{2}$ | Moyennes respectives des populations 1 et 2. |
+| $\sigma_{1}, \sigma_{2}$ | Ecarts-types respectifs des populations 1 and 2. |
+| $N_1$, $N_2$ | Tailles (nombre d'individus) des populations 1 et 2. |
+| $n_1$, $n_2$ | Effectifs (nombre d'individus) des échantillons prélevés sur les populations 1 et 2. |
+| $\bar{x}_{1}, \bar{x}_{2}$ | Moyennes d'échantillons. |
+| $\delta = \mu_{2} - \mu{1} | Différence entre les moyennes des populations. |
+| $d = \hat{\delta} = \hat{\mu}_2 - \hat{\mu}_1  = \bar{x}_2 - \bar{x}_1$ | $d$ = **Taille d'effet**: dans un test de comparaison de moyennes, il s'agit de la différence entre les moyennes d'échantillons, utilisée comme estimateur de $\delta$. |
+| $s^2_{1}, s^2_{2}$ | Variances mesurées sur les échantillons. |
+| $\hat{\sigma}_p = \sqrt{\frac{n_1 s_1^2 + n_2 s_2^2}{n_1+n_2-2}}$ | Ecart-type groupé (*pooled standard deviation*), utilisé comme estimateur de l'écart-type commun des deux populations, en supposant leurs variances égales (hypothèse de travail d'homoscédasticité). |
+| $\hat{\sigma}_\delta = \hat{\sigma}_p \sqrt{\left(\frac{1}{n_1}+ \frac{1}{n_2}\right)}$  | Erreur standard sur la différence entre moyennes, en supposant que les populations ont la même variance (test de Student). |
+| $t_{S} = \frac{\hat{\delta}}{\hat{\sigma}_\delta} =  \frac{\bar{x}_{2} - \bar{x}_{1}}{\sqrt{\frac{n_1 s_{1}^2 + n_2 s_{2}^2}{n_1+n_2-2} \left(\frac{1}{n_1}+ \frac{1}{n_2}\right)}}$ | statistique $t$ de Student |
+| $t_{W}=\frac{\bar{x}_{1} - \bar{x}_{2}}{\sqrt{\frac {s^2_{1}}{n_1} + \frac{s^2_{2}}{n_2}}}$ | statistique $t$ de Welch |
+| | |
+
