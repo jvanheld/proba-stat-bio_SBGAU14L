@@ -1,0 +1,337 @@
+---
+title: "Tuto/exo: Test d'ajustement"
+author: "Andreas Zanzoni (ORCID [0000-0002-4818-6161](https://orcid.org/0000-0002-4818-6161))"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    self_contained: no
+    code_folding: hide
+    collapsed: true
+    fig_caption: true
+    highlight: zenburn
+    theme: cerulean
+    toc: true
+    toc_depth: 3
+    toc_float: true
+  pdf_document:
+    fig_caption: true
+    highlight: zenburn
+    toc: true
+    toc_depth: 3
+  html_notebook:
+    self_contained: yes
+    code_folding: show
+    collapsed: false
+    fig_caption: true
+    highlight: zenburn
+    theme: cerulean
+    toc: true
+    toc_depth: 3
+    toc_float: true
+  word_document:
+    toc: true
+    toc_depth: '3'
+editor_options:
+  chunk_output_type: console
+---
+
+
+
+```{r settings, include=FALSE, echo=FALSE, eval=TRUE}
+library(knitr)
+
+options(width = 300)
+# options(encoding = 'UTF-8')
+knitr::opts_chunk$set(
+  fig.width = 7, fig.height = 5, 
+  fig.path = 'figures/adjustment_',
+  fig.align = "center", 
+  size = "tiny", 
+  echo = TRUE, 
+  eval = TRUE, 
+  warning = FALSE, 
+  message = FALSE, 
+  results = TRUE, 
+  comment = "")
+
+options(scipen = 12) ## Max number of digits for non-scientific notation
+# knitr::asis_output("\\footnotesize")
+
+```
+
+
+## Tutoriel
+
+Dans ce tutoriel, nous illustrons quelques concepts de base pour vérifier si un échantillon observé est compatible avec un modèle théorique donné (ex. loi normale), et proposons quelques exercices pour vous familiariser avec ces concepts, et avec les fonctions R pertinentes. 
+
+### Exploration visuelle
+
+Avant d'appliquer un test de normalité, il est toujours préférable d'examiner les données (evaluation visuelle). 
+Nous generons trois échantillons differents avec le but de verifier lequel (ou lequels) pourraient suivre une loi normale.
+
+Nous utilisons la fonction `par()` pour visualiser les trois distributions une à coté de l'autre.
+
+Observez les diagrammes. Tirez vous conclusions. 
+
+```{r three_random_distributions}
+# Set seed for reproducibility
+set.seed(123)
+
+# Generate three different distributions of equal sizes (n=1000)
+distr_one <- rexp(n = 1000)
+distr_two <- rnorm(n = 1000, mean = 0, sd = 1) 
+distr_three <- c(rnorm(n = 500, mean = -1, sd = 0.7), rnorm(n = 500, mean = 1, sd = 0.5))
+
+#plot the distributions
+par(mfrow = c(1, 3)) # one line, three columns
+hist(distr_one, col = "lightblue", breaks = 30, main="Distribution one",xlab="Value")  # Histogram with 30 bins
+hist(distr_two, col = "lightblue", breaks = 30, main="Distribution two",xlab="Value")  # Histogram with 30 bins
+hist(distr_three, col = "lightblue", breaks = 30, main="Distribution three",xlab="Value")  # Histogram with 30 bins
+
+```
+
+Vos conclusions ici : 
+
+****************************************************************
+
+####  Exercice 1 : les histogrammes
+
+Essayez de changer le nombre d'intervalles dans les diagrammes en modifiant le code ci-dessous. 
+
+Astuce : pour changer le nombre d'intervalles il faut trouver le bon paramètre. Consultez la page d'aide de la fonction `hist()` dans la Console avec `help(hist())`.
+
+```{r three_random_distributions_exercise}
+#plot the distributions
+par(mfrow = c(1, 3)) # one line, three columns
+hist(distr_one, col = "lightblue", breaks = 30, main="Distribution one",xlab="Value")  # Histogram with 30 bins
+hist(distr_two, col = "lightblue", breaks = 30, main="Distribution two",xlab="Value")  # Histogram with 30 bins
+hist(distr_three, col = "lightblue", breaks = 30, main="Distribution three",xlab="Value")  # Histogram with 30 bins
+
+```
+
+****************************************************************
+
+### Q-Q plots
+
+
+Un diagramme quantile-quantile, ou Q-Q plot, permet d'évaluer graphiquement l'ajustement d'un échantillon à modèle théorique.
+
+Pour rappel : un quantile est une valeur qui sépare un échantillon en intervalles de la même taille ou probabilité.
+
+Dans un Q-Q plot on compare la position des quantiles de l'échantillon observé avec leur position dans la population théorique. 
+
+Si les points résultants s'alignent (à peu près) sur une ligne droite, on peut supposer que l'ajustement est pertinent.
+
+Exécutez les chucks de code ci-dessous et observez les Q-Q plots pour chaque échantillon. Tirez vos conclusions.
+
+
+```{r qq_random_distribution_one}
+
+#plot the distributions
+par(mfrow = c(1, 2)) # one line, two columns
+hist(distr_one, col = "lightblue", breaks = 30, main="Distribution one",xlab="Value")  # Histogram with 30 bins
+qqnorm(distr_one, main = "Normal Q-Q Plot for Distribution one")
+qqline(distr_one)
+```
+
+
+```{r qq_random_distribution_two}
+
+#plot the distributions
+par(mfrow = c(1, 2)) # one line, two columns
+hist(distr_two, col = "lightblue", breaks = 30, main="Distribution two",xlab="Value")  # Histogram with 30 bins
+qqnorm(distr_two, main = "Normal Q-Q Plot for Distribution two")
+qqline(distr_two)
+```
+
+```{r qq_random_distribution_three}
+
+#plot the distributions
+par(mfrow = c(1, 2)) # one line, two columns
+hist(distr_three, col = "lightblue", breaks = 30, main="Distribution three",xlab="Value")  # Histogram with 30 bins
+qqnorm(distr_three, main = "Normal Q-Q Plot for Distribution three")
+qqline(distr_three)
+par(mfrow=c(1,1))
+```
+
+Vos conclusions ici : 
+
+****************************************************************
+
+### Test de normalité
+
+Le test de Shapiro-Wilk permet d'évaluer si un échantillon suit la loi normale.
+
+Nous éxécutons le test sur les trois distributions précédemment générées.
+
+Hypothèse nulle : l'échantillon observé suit une loi normale.
+
+Observez les résultats et tirez vos conclusions.
+
+
+```{r shapiro_wilk}
+
+# Perform Shapiro-Wilk test on each distribution
+shapiro_test_one <- shapiro.test(distr_one)
+shapiro_test_two <- shapiro.test(distr_two)
+shapiro_test_three <- shapiro.test(distr_three)
+
+# Print results
+print("Shapiro-Wilk Test Results:")
+print(paste("Distribution one - W =", round(shapiro_test_one$statistic, 3), ", p-value =", round(shapiro_test_one$p.value, 3)))
+print(paste("Distribution two - W =", round(shapiro_test_two$statistic, 3), ", p-value =", round(shapiro_test_two$p.value, 3)))
+print(paste("Distribution three - W =", round(shapiro_test_three$statistic, 3), ", p-value =", round(shapiro_test_three$p.value, 3)))
+
+```
+
+Vos conclusions ici : 
+
+****************************************************************
+
+####  Exercice 2 : Association entre variation allélique et l'expression génique
+
+L'activité d'un promoteur a été testée grâce à une expérience de "luciferase assay".
+
+L'expérience a mesuré le signal luciférase de l'allèle de type sauvage (wt) et celui d'un allèle mutant.
+
+Vérifiez la normalité des données avec le Q-Q plot et le test de Shapiro-Wilk. 
+
+Évaluez si les allèles de type sauvage et mutant diffèrent au niveau de leur signal luciférase en utilisant un test t. 
+
+Formulez l’hypothèse nulle.
+
+Y a-t-il un lien entre la variation allélique et l'expression génique ?
+
+
+```{r luciferase_assay}
+par(mfrow=c(1,1))
+# luciferase signals (wild-type allele)
+wt <- c(0.786, 1.0978, 1.2563, 0.9746, 0.893, 0.9922, 0.9013, 1.1021, 1.0441, 0.9524)
+
+# luciferase signals (mutant allele)
+mutant <- c(0.4099, 0.2972, 0.7156, 0.8035, 0.7348, 0.8104, 0.5002, 0.6945, 0.7432, 0.5712)
+
+boxplot(wt, mutant, col = "lightblue", names = c("WT", "Mutant"), ylab = "Value")
+# Add the mean as an orange plot
+points(c(1, 2), c(mean(wt), mean(mutant)), pch = 16, col = "orange")
+
+## Run two Shapiro test for the WT and mutant samples, respectively
+shapiro.test(wt)
+shapiro.test(mutant)
+
+```
+
+****************************************************************
+
+####  Exercice 3 : 
+
+Nous avons sélectionné deux protéines identifiées dans l'expérience décrite dans l'article de [Canale *et al.* (2023)](doi.org/10.1016/j.xgen.2023.100331).
+
+La première est la *Procollagen-lysine,2-oxoglutarate 5-dioxygenase 1* codée par le gène **PLOD1**. La deuxième est la *Sterol O-acyltransferase 1* codée par le gene **SOAT1**.
+
+Nous avons à disposition les données d'abondance dans les échantillons de carcinoma hépatique (*HCC*) et dans les échantillons de foies sains (*liver*).
+
+Pour chaque protéine, vérifiez la normalité des données (*HCC* et *liver*) avec le Q-Q plot et le test de Shapiro-Wilk. 
+
+Évaluez si l'abondance de deux protéines diffère entre les échantillons *HCC* et les échantillons  *liver* en utilisant un test t. 
+
+Formulez l’hypothèse nulle. Tirez vos conclusions.
+
+
+
+```{r abundance_HCC-liver}
+par(mfrow=c(1,1))
+# Abundance of PLOD1 in HCC samples
+PLOD1_HCC <- c(26.25333435, 29.19924481, 26.70833057, 29.24807639, 28.62644876, 29.93297676, 28.962677, 26.37716286, 27.30033692, 28.22379816, 29.0607743, 26.94882241, 28.24703517, 25.68821829,
+30.14892047, 28.47707367, 29.83000369, 29.56230893, 29.54710625, 29.09164167, 29.47583756, 28.51878352, 28.07902792, 26.94078136, 30.35625976, 25.19106705, 26.77893917, 30.35352818, 26.97738283, 28.2768851, 27.33883633, 30.3876149, 29.5727533)
+
+summary(PLOD1_HCC)
+
+# Abundance of PLOD1 in normal liver samples
+PLOD1_liver <- c(27.57513619, 26.16211746, 27.55647366, 27.79240725, 27.94547741, 26.51825826, 27.06445382, 27.13926624, 26.34189271, 27.99020976, 27.8013783, 27.1786416, 27.40145455, 25.29165187, 27.93814711, 23.96013772, 26.08925908, 28.34193512, 25.5605754, 26.93370848, 26.62268393, 28.39856268, 28.4563845, 28.07352241, 28.79361695, 25.35393614, 27.6505466, 27.51186483, 26.59434374, 26.45029253, 26.22740178, 27.93185032, 27.74374587, 26.34121408)
+
+summary(PLOD1_liver)
+
+boxplot(PLOD1_HCC, PLOD1_liver, col = "lightblue", names = c("HCC", "liver"), ylab = "Value", main="PLOD1")
+#Add the mean as an orange plot
+points(c(1, 2), c(mean(PLOD1_HCC), mean(PLOD1_liver)), pch = 16, col = "orange")
+
+## Run two Shapiro test for the WT and mutant samples, respectively
+cat("PLOD1, HCC samples")
+shapiro.test(PLOD1_HCC)
+
+cat("PLOD1, liver samples")
+print(shapiro.test(PLOD1_liver))
+
+# Abundance of SOAT1 in HCC samples
+SOAT1_HCC <- c(23.65534554,25.98333218,24.99614968,24.69317299,24.4096991,25.78366731,24.041347,23.40418631,25.88103347,28.16317378,26.64030761,26.42582416,24.17417108,25.79446624,26.82893002,25.48222302,27.76458513,27.0581698,26.70252972,24.5709744,23.49081563,24.93107256,24.65889005,24.53023153,26.91786572)
+
+summary(SOAT1_HCC)
+
+# Abundance of SOAT1 in normal liver samples
+SOAT1_liver <- c(23.58083912,23.74293684,24.42322929,24.15383217,23.33087641,24.30917823,23.29530035,25.54886705,23.01808062,25.52722141,24.3938827,24.20232175,24.98567902,22.8192303,25.24945145,24.43593472,25.99580475,23.94055735,24.865094,24.49118274,24.22169803,24.03640841)
+
+summary(SOAT1_liver)
+
+boxplot(SOAT1_HCC, SOAT1_liver, col = "lightblue", names = c("HCC", "liver"), ylab = "Value", main="SOAT1")
+#Add the mean as an orange plot
+points(c(1, 2), c(mean(SOAT1_HCC), mean(SOAT1_liver)), pch = 16, col = "orange")
+
+
+## Run two Shapiro test for the WT and mutant samples, respectively
+qqnorm(SOAT1_HCC)
+grid()
+qqline(SOAT1_HCC)
+cat("SOAT1, HCC samples")
+shapiro.test(SOAT1_HCC)
+
+qqnorm(SOAT1_liver)
+grid()
+qqline(SOAT1_liver)
+cat("SOAT1, liver samples")
+print(shapiro.test(SOAT1_liver))
+
+
+```
+
+
+Vos conclusions ici : 
+
+****************************************************************
+
+####  Exercice BONUS : les quantiles
+
+Le code ci-dessous génère un diagramme à points (voir présentation cours).
+
+Observez le code, essayez de le comprendre et répondez à la question suivante :
+
+À quoi sert la fonction `summary()` ?
+
+**Défi 1**: Modifiez le code afin de visualiser les données contenues dans le vector `x` en diagramme à boite (*boxplot*). 
+Astuce : Regardez les chucks précédents pour trouver la solution. 
+
+**Défi 2**: Modifiez le code afin de visualiser le diagramme à points et le diagramme à boîte côte à côte. Astuce : Regardez les chucks précédents pour trouver la solution.
+
+
+```{r quantiles_exercise}
+
+# create a vector containing 11 data points
+x <- c(-2.2146999,-1.3356286,-0.9356286,-0.6264538,-0.2553884,0.2836433,0.6874291,0.9383247,1.5117812,1.9952808,2.4146999)
+
+# Display summary statistics
+summary(x)
+
+# All points will share the same x-position in the plot
+xpos <- rep(1, length(x))
+
+# Plot the data points 
+plot(
+  xpos, x,
+  xaxt = "n", xlab = "",
+  ylab = "Value",
+  pch = 19,
+  ylim = c(-2.6,2.6),
+  col = "lightblue"
+)
+
+```
