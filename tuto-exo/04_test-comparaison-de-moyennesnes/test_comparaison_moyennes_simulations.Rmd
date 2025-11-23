@@ -408,10 +408,10 @@ b. Répétez `r replicates` fois le test de Student au moyen de la fonction `t.t
 #'
 #' @param n1 Taille de l'échantillon 1.
 #' @param n2 Taille de l'échantillon 2.
-#' @param m1 Moyenne de la population 1.
-#' @param m2 Moyenne de la population 2.
-#' @param s1 Écart-type de la population 1.
-#' @param s2 Écart-type de la population 2.
+#' @param mu1 Moyenne de la population 1.
+#' @param mu2 Moyenne de la population 2.
+#' @param sigma1 Écart-type de la population 1.
+#' @param sigma2 Écart-type de la population 2.
 #'
 #' @return Un vecteur numérique nommé de longueur 2 :
 #' \describe{
@@ -427,14 +427,14 @@ b. Répétez `r replicates` fois le test de Student au moyen de la fonction `t.t
 #' one_test(10, 10, 7, 7, 2, 4)
 #'
 #' @export
-one_test <- function(n1, n2, m1, m2, s1, s2) {
+one_test <- function(n1, n2, mu1, mu2, sigma1, sigma2) {
   
   # Échantillons simulés
-  x1 <- rnorm(n1, mean = m1, sd = s1)
-  x2 <- rnorm(n2, mean = m2, sd = s2)
+  x1 <- rnorm(n1, mean = mu1, sd = sigma1)
+  x2 <- rnorm(n2, mean = mu2, sd = sigma2)
   
   # Choix automatique du test
-  equal_var <- (s1 == s2)
+  equal_var <- (sigma1 == sigma2)
   
   ttest <- t.test(x1, x2, var.equal = equal_var)
   
@@ -449,26 +449,79 @@ one_test <- function(n1, n2, m1, m2, s1, s2) {
 ## Parameterss
 n1 = 10
 n2 = 10
-m1 = 7
-m2 = 7
-s1 = 2
-s2 = 2
+mu1 = 7
+mu2 = 7
+sigma1 = 2
+sigma2 = 2
 
 ## Replications of the t test
 results_H0 <- data.frame(t(replicate(
   n = replicates, 
-  expr = one_test(n1 = n1, n2 = m2, m1 = m1, m2 = m2, s1 = s1, s2 = s2))))
+  expr = one_test(n1 = n1, n2 = n2, mu1 = mu1, mu2 = mu2, sigma1 = sigma1, sigma2 = sigma2))))
 colnames(results_H0) <- c("t", "p")
-# head(results_H0)
 ```
 
 
 c. Dessinez l'histogramme des valeurs $t$ obtenues empiriquement.
 
-```{r hist_t_under_H0, fig.width=7, fig.height=8, out.width="90%", fig.cap="Dstribution of the observed t statistics in 10 000 replicates of a Student test under H0. "}
 
-#### plot the histograms of t statistics and P-values in the simulated t-tests under H0 ####
+```{r ttest_histogram}
+#### A function that plots the histograms of t statistics and P-values in the simulated t-tests under H0 ####
+
+#' Plot Histograms of t Statistics and p-values from Simulated t-tests
+#'
+#' This function produces two stacked histograms (t statistics and p-values)
+#' obtained from simulated t-tests under the null hypothesis.
+#' It overlays a fitted Student t-density on the observed t-statistics
+#' and draws reference lines showing the expected distribution of p-values.
+#'
+#' @param ttest_results A list or data frame containing two numeric components:
+#'   \describe{
+#'     \item{\code{t}}{A numeric vector of observed t statistics.}
+#'     \item{\code{p}}{A numeric vector of observed p-values.}
+#'   }
+#' @param col_t_obs Color of the histogram bars for observed t statistics.
+#' @param col_t_mean Color of the vertical line showing the empirical mean of t.
+#' @param col_t_fit Color of the fitted Student t density curve.
+#' @param col_p_pos Color used for p-values below the significance threshold 
+#'   (first histogram bin).
+#' @param col_p_neg Color used for p-values above the significance threshold.
+#' @param col_p_exp Color of the reference line showing the expected uniform
+#'   distribution of p-values.
+#'
+#' @return This function is used for its side effects: it produces two histograms
+#'   on the current graphics device. It returns \code{NULL} invisibly.
+#'
+#' @details
+#' The function expects that several global variables exist in the environment:
+#' \code{n1}, \code{n2}, \code{replicates}, \code{mu1}, \code{mu2},
+#' \code{sigma1}, \code{sigma2}.  
+#' These values are used to compute the fitted t distribution and to display
+#' summary information in the legends.
+#'
+#' If you plan to turn this into a package function, it is recommended to pass
+#' these values explicitly as arguments rather than relying on global variables.
+#'
+#' @examples
+#' \dontrun{
+#' # Suppose you already simulated results:
+#' results <- list(
+#'   t = rnorm(1000),     # placeholder values
+#'   p = runif(1000)
+#' )
+#'
+#' ttest_histograms(results)
+#' }
+#'
+#' @importFrom graphics hist grid abline legend par lines
+#' @export
 ttest_histograms <- function (ttest_results,
+                              n1 = n1,
+                              n2 = n2,
+                              mu1 = mu1,
+                              mu2 = mu2,
+                              sigma1 = sigma1,
+                              sigma2 = sigma2,
                               col_t_obs = "#DDBBFF",
                               col_t_mean = "orange",
                               col_t_fit = "blue",
@@ -477,9 +530,23 @@ ttest_histograms <- function (ttest_results,
                               col_p_exp  = "blue") {
   
   par(mfrow=c(2,1))
-  ## Hstogram of observed t statistics
+  
+  ## Compute parameteers
+  delta <- mu1 - mu2
+  message("Computing non-centrality parameter (ncp)")
+  if (sigma1 == sigma2) {
+    message("Equal variances : sigma1=sigma2 = ", sigma1)
+    SE <- sigma1 * sqrt(1/n1 + 1/n2)
+  } else {
+    message("Unequal variances : sigma1=", sigma1, "; sigma2=", sigma2)
+    SE <- sqrt(sigma1^2/n1 + sigma2^2/n2)
+  }
+  lambda <- delta / SE
+  
+  
+  ## Hstogram of observedt statistics
   t_hist <- hist(ttest_results$t, breaks = 100, 
-                 main = "Observed t statistics",
+                 main = bquote("Distribution of t statistics with " ~ delta == .(delta)),
                  xlab = "t",
                  col = col_t_obs, 
                  border="white",
@@ -491,7 +558,10 @@ ttest_histograms <- function (ttest_results,
   x <- t_hist$mids
   n_breaks <- length(t_hist$breaks) ## Number of class intervals in the histogram
   w <- t_hist$breaks[2:n_breaks] - t_hist$breaks[1:(n_breaks - 1)]
-  y <- dt(x = t_hist$mids - mean(ttest_results$t), df = n1 + n2 - 2) * replicates * w
+  y <- dt(x = t_hist$mids, # - mean(ttest_results$t), 
+          ncp = lambda <- delta / SE,
+          df = n1 + n2 - 2
+  ) * replicates * w
   lines(x = x, y = y, col = col_t_fit)
   
   legend("topright", 
@@ -505,32 +575,52 @@ ttest_histograms <- function (ttest_results,
   
   legend("topleft", 
          legend = c(
-           paste0("replicates=", replicates),
-           paste0("n1=", n1),
-           paste0("n2=", n2),
-           paste0("m1=", m1),
-           paste0("m1=", m1),
-           paste0("s1=", s1),
-           paste0("s1=", s1)
+           paste0("r=", replicates),
+           paste0("n1=", n1, "; n2=", n2),
+           bquote(mu[1] == .(mu1) ~ "; " ~mu[2] == .(mu2)),
+           bquote(sigma[1] == .(sigma1) ~ "; " ~sigma[2] == .(sigma2)),
+           bquote(delta == .(delta)),
+           paste0("SE=", signif(SE, digits = 3)),
+           bquote(lambda == .(lambda))
          ), bty = "n",
-         cex = 0.7)
+         cex = 0.9)
   
   sum(t_hist$counts)
   
   ## Hstogram of t-test P-values
   p_hist <- hist(ttest_results$p, 
                  breaks = seq(from = 0, to = 1, by = 0.05), 
-                 main = "T test P-values",
+                 main = "P-values",
                  xlab = "P-value",
                  col = c(col_p_pos, rep(length.out = 19, col_p_neg)), border="white",
                  las = 1)
   grid()
   abline(h = replicates / 20, col = col_p_exp, lwd = 2, lty = "dashed")
   
+  np <- sum(ttest_results$p <= alpha) # Number of tests declared positive
+  nn <- sum(ttest_results$p > alpha) # Number of tests declared negative
+  legend("right", 
+         legend = c(
+           bquote(alpha  ~ " = "  ~ .(alpha)),
+           paste0(np, " positives: "),
+           paste0(nn, " negatives: ")
+         ),
+         cex = 1)
+  
   par(mfrow=c(1,1))
 }
 
-ttest_histograms(ttest_results = results_H0, col_p_pos = "#BB0000", col_p_neg = "skyblue")
+
+```
+
+
+```{r hist_t_under_H0, fig.width=7, fig.height=8, out.width="90%", fig.cap="Dstribution of the observed t statistics in 10 000 replicates of a Student test under H0. "}
+
+ttest_histograms(ttest_results = results_H0, 
+                 n1 = n1, n2 = n2,
+                 mu1 = mu1, mu2 = mu2, 
+                 sigma1 = sigma1, sigma2 = sigma2,
+                 col_p_pos = "#BB0000", col_p_neg = "skyblue")
 
 
 ```
@@ -561,22 +651,25 @@ Nous sommes sous hypothèse d'homoscédasticité, nous pouvons dont utiliser le 
 ## Parameterss
 n1 = 10
 n2 = 10
-m1 = 6
-m2 = 8
-s1 = 2
-s2 = 2
+mu1 = 6
+mu2 = 8
+sigma1 = 2
+sigma2 = 2
 
 ## Replications of the t test
 results_H1 <- data.frame(t(replicate(
   n = replicates, 
-  expr = one_test(n1 = n1, n2 = m2, m1 = m1, m2 = m2, s1 = s1, s2 = s2))))
+  expr = one_test(n1 = n1, n2 = n2, mu1 = mu1, mu2 = mu2, sigma1 = sigma1, sigma2 = sigma2))))
 colnames(results_H1) <- c("t", "p")
 # head(results_H1)
 ```
 
 ```{r hist_t_under_H1, fig.width=7, fig.height=8, out.width="90%", fig.cap="Dstribution of the observed t statistics in 10 000 replicates of a Student test under H1. "}
 
-ttest_histograms(ttest_results = results_H1, col_p_pos = "orange", col_p_neg = "#00BB00")
+ttest_histograms(ttest_results = results_H1, n1 = n1, n2 = n2,
+                 mu1 = mu1, mu2 = mu2, 
+                 sigma1 = sigma1, sigma2 = sigma2,
+                 col_p_pos = "orange", col_p_neg = "#00BB00")
 
 ```
 
@@ -602,6 +695,86 @@ Dans ce test, nous sommes sous hypothèse alternative ($H_1$), le résultat corr
 Nous pouvons en dériver une mesure empirique de la **puissance du test**, en calculant la proportion de résultats de tests négatifs parmi l'ensemble des tests réalisés. 
 
 $$\text{Power} = \frac{\text{FN}}{\text{TP} + \text{FN}} =  \frac{`r n_neg`}{`r n_pos` + `r n_neg`} = `r ttest_power`$$
+
+
+## Impact the la différence de moyennes sur la puissance
+
+Nous testons ci-dessous l'impact de la différence entre moyennes de populations sur la puissance dy test de Student. 
+
+```{r}
+#### Immmpact de la différence sur la puissance ####
+
+## Parameterss
+replicates <- 1000     ## Number of replicates
+n1 = 10
+n2 = 10
+mu1 = 0
+sigma1 = 1
+sigma2 = 1
+delta_values <- seq(from = 0, to = 3, by = 0.2)
+
+
+## Replications of the t test
+results <- list()
+t_values <- list()
+p_values <- list()
+for (delta in delta_values) {
+  mu2 = mu1 + delta
+  
+  label <- as.character(delta)
+  results <- data.frame(t(replicate(
+    n = replicates, 
+    expr = one_test(n1 = n1, n2 = n2, mu1 = mu1, mu2 = mu2, sigma1 = sigma1, sigma2 = sigma2))))
+  colnames(results) <- c("t", "p")
+  p_values[[label]] <- results$p
+  t_values[[label]] <- results$t
+  
+}
+
+
+#par(mfrow = c(2,1))
+boxplot(t_values, col="#DDBBFF", 
+        main = "Impact of mean difference on the t statistics", 
+        xlab = expression(delta == mu[1] - mu[2]),
+        ylab = "Observed t values",
+        las = 2)
+abline(h=seq(floor(min(unlist(t_values))), ceiling(max(unlist(t_values))), 1), col="#DDDDDD")
+
+boxplot(p_values, col="skyblue", 
+        main = "Impact of mean difference on the Student P-value", 
+        xlab = expression(delta == mu[1] - mu[2]),
+        ylab="P-values",
+        las = 2)
+abline(h=seq(0, 1, 0.1), col="#DDDDDD")
+#par(mfrow = c(1,1))
+
+#### Compute the sensitivity ####
+alpha_values <- c(0.1, 0.05, 0.01)
+plot(NULL, 
+     main = "Impact of effect size on sensitivity",
+     xlab = bquote(delta == mu[1] - mu[2]),
+     ylab = "Sensitivity",
+     xlim=range(delta_values), 
+     ylim = c(0,1), las = 1)
+grid()
+#sens <- list()
+alpha_col = c("cyan3", "orange2", "green3")
+i <- 0
+for (a in alpha_values) {
+  i <- i + 1
+  #  sens[[as.character(a)]] <- sapply(p_values, function(x) mean(x < a))
+  sens_values <- sapply(p_values, function(x) mean(x < a))
+  lines(x = delta_values, y = sens_values, 
+        col = alpha_col[i],
+        type = "b")
+}
+
+
+```
+
+
+## Impact the l'écart-type sur la puissance
+
 
 
 ## Test avec variances inégales
