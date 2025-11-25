@@ -173,7 +173,7 @@ On effectue un test d’égalité des moyennes avec la méthode de Student basé
 
 ```{r student_test}
 
-t.test(x$control, x$treated, alternative = "two.sided", var.equal = TRUE, paired = TURE)
+t.test(x$control, x$treated, alternative = "two.sided", var.equal = TRUE, paired = TRUE)
 
 ```
 
