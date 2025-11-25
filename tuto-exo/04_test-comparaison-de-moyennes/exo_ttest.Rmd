@@ -1,0 +1,200 @@
+---
+title: "Exercises : t-test"
+subtitle: "Proba/stat pour la biologie (SBGAU14L)"
+author: "Jacques van Helden (ORCID [0000-0002-8799-8584](https://orcid.org/0000-0002-8799-8584))"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    code_folding: hide
+    fig_caption: yes
+    highlight: zenburn
+    theme: cerulean
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  word_document:
+    toc: yes
+    toc_depth: 3
+  ioslides_presentation:
+    colortheme: dolphin
+    fig_caption: yes
+    fig_height: 6
+    fig_width: 7
+    fonttheme: structurebold
+    highlight: tango
+    incremental: no
+    keep_md: no
+    smaller: yes
+    theme: cerulean
+    toc: yes
+    widescreen: yes
+  beamer_presentation:
+    colortheme: dolphin
+    fig_caption: yes
+    fig_height: 6
+    fig_width: 7
+    fonttheme: structurebold
+    highlight: tango
+    incremental: no
+    keep_tex: no
+    slide_level: 2
+    theme: Montpellier
+    toc: yes
+  slidy_presentation:
+    fig_caption: yes
+    fig_height: 6
+    fig_width: 7
+    highlight: tango
+    incremental: no
+    keep_md: no
+    smaller: yes
+    theme: cerulean
+    toc: yes
+    toc_float: yes
+    widescreen: yes
+  pdf_document:
+    fig_caption: yes
+    highlight: zenburn
+    toc: yes
+    toc_depth: 3
+---
+
+```{r settings, include=FALSE, echo=FALSE, eval=TRUE}
+library(knitr)
+
+options(width = 300)
+# options(encoding = 'UTF-8')
+knitr::opts_chunk$set(
+  fig.width = 7, fig.height = 5, 
+  fig.path = 'figures/canale23_',
+  fig.align = "center", 
+  size = "tiny", 
+  echo = TRUE, 
+  eval = TRUE, 
+  warning = FALSE, 
+  message = FALSE, 
+  results = TRUE, 
+  comment = "")
+
+options(scipen = 12) ## Max number of digits for non-scientific notation
+# knitr::asis_output("\\footnotesize")
+
+```
+
+## Exercice 1
+
+On a testé l’effet un médicament, en mesurant sur 6 souris le taux d’immunoglobuline avant (contrôle) et après le traitement (test). Pour le test, l’une des 6 mesures a échoué, on a donc une valeur non définie (NA). 
+
+Dans cette configuration, définissez les concepts d’échantillons et de populations. 
+Comment estimez-vous les paramètres de populations à partir de ces données 
+
+- Moyenne
+- Variance
+- Écart-type
+
+Indiquez les formules avec les symboles, et ensuite avec les valeurs numériques. Vous ne devez pas calculer le résultat numérique. 
+
+
+
+```{r}
+
+x_c <- c(7, 9, 8, 11, 14, 13)
+x_t <- c(10, 11, NA, 12, 13, 15)
+
+x <- data.frame("control" = x_c, "treated" = x_t)
+
+kable(x, row.names = TRUE)
+
+stat <- data.frame(
+  n = apply(!is.na(x), 2, sum),
+  mean_est = apply(x, 2, mean, na.rm = TRUE),
+  var_est = apply(x, 2, var, na.rm = TRUE),
+  ssd_est = apply(x, 2, sd, na.rm = TRUE)
+)
+
+#sample_var = apply(sweep(x = x, MARGIN = 2, STATS = stat$mean_est)^2, 2, mean, na.rm = TRUE)
+#sample_var * n / (n - 1)
+
+kable(t(stat))
+
+
+
+```
+
+## Exercice : test de Student
+
+On effectue un test d’égalité des moyennes avec la méthode de Student
+
+- Quelles sont les hypothèses de travail ?
+- Vous semblent-elles justifiées ?
+- Comment calculez-vous la statistique de test ? Indiquez la formule avec les symboles, puis la formule avec les valeurs numériques.  
+- Utilisez la table de la distribution fournie pour calculer le seuil de rejet de l’hypothèse nulle, avec un risque d’erreur de premier type de  0.05
+- **Effectuez le test avec la fonction t.test() de R et interprétez le résultat**
+
+
+
+```{r student_test}
+
+t.test(x$control, x$treated, alternative = "two.sided", var.equal = TRUE, paired = FALSE)
+
+```
+
+
+## Exercice : test de Welch
+
+On effectue un test d’égalité des moyennes avec la méthode de Welch
+
+- Quelles sont les hypothèses de travail ?
+- Vous semblent-elles justifiées ?
+- Comment calculez-vous la statistique de test ? Indiquez la formule avec les symboles, puis la formule avec les valeurs numériques.  
+- Utilisez la table de la distribution fournie pour calculer le seuil de rejet de l’hypothèse nulle, avec un risque d’erreur de premier type de  0.05
+- **Effectuez le test avec la fonction t.test() de R et interprétez le résultat**
+
+
+
+```{r student_test}
+
+t.test(x$control, x$treated, alternative = "two.sided", var.equal = FALSE, paired = FALSE)
+
+```
+
+
+## Exercice : test de Student avec échantillons appariés
+
+On effectue un test d’égalité des moyennes avec la méthode de Student basé sur les échantillons appariés
+
+- Quelles sont les hypothèses de travail ?
+- Vous semblent-elles justifiées ?
+- Comment calculez-vous la statistique de test ? Indiquez la formule avec les symboles, puis la formule avec les valeurs numériques.  
+- Utilisez la table de la distribution fournie pour calculer le seuil de rejet de l’hypothèse nulle, avec un risque d’erreur de premier type de  0.05
+- **Effectuez le test avec la fonction t.test() de R et interprétez le résultat**
+
+
+
+```{r student_test}
+
+t.test(x$control, x$treated, alternative = "two.sided", var.equal = TRUE, paired = TURE)
+
+```
+
+
+
+
+```{r}
+prot_id <- "P11597-2"
+x <- 	c(24.86, 25.22, NA, NA, NA, NA, NA, 29.14, 22.90, NA, 25.41, NA, NA, NA, NA, NA, NA, NA, NA, 24.40, NA, 25.34, NA, NA, NA, 24.66, NA, NA, NA, 26.01, 23.38, 24.01, 24.84, 23.29, NA, NA, NA, NA, NA, 23.18, NA, NA, NA, NA, NA, NA, NA, NA, NA, 23.38, NA, 23.44, NA, NA, NA, NA, 23.90, NA, NA, 25.19, 25.06, 22.90)
+labels <- c(rep("HCC", length.out = 31), rep("Liver", length.out = 31))
+x_HCC <- x[labels == "HCC"]
+x_liver <- x[labels == "Liver"]
+
+## Student test
+t.test(x_HCC, x_liver, var.equal = TRUE)
+
+## Welch test
+t.test(x_HCC, x_liver, var.equal = FALSE)
+
+## Paired t-test
+t.test(x_HCC, x_liver, var.equal = TRUE, paired = TRUE)
+
+```
+
