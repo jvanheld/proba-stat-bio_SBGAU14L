@@ -27,5 +27,5 @@ Supports du cours "Probabilités et statistiques pour la biologie" (SBGAU14L) en
 
 ## Liens
 
-Web : [jvanheld.github.io/proba-stat-bio_SBGAU14L/](https://jvanheld.github.io/proba-stat-bio_SBGAU14L/)
-Dépôt code source : [github.com/jvanheld/proba-stat-bio_SBGAU14L](https://github.com/jvanheld/proba-stat-bio_SBGAU14L)
+- Web : [jvanheld.github.io/proba-stat-bio_SBGAU14L/](https://jvanheld.github.io/proba-stat-bio_SBGAU14L/)
+- Dépôt code source : [github.com/jvanheld/proba-stat-bio_SBGAU14L](https://github.com/jvanheld/proba-stat-bio_SBGAU14L)
