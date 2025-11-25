@@ -71,7 +71,7 @@ options(scipen = 12) ## Max number of digits for non-scientific notation
 ## we draw a sample of 25 random numbers in a uniform distribution, and we run a Shapiro-Wikl test
 ## 
 ## We repat the experiment 99 times to evaluate the fluctuations of the Shapiro-Wilk test result. 
-repeats <- 1000
+repeats <- 10000
 n_values <- c(10, 25, 50, 75, 100)
 
 message("Testing normality with random numbers from uniform distribution")
@@ -137,9 +137,10 @@ for (n in n_values) {
        breaks=seq(0,1,0.05),
        col = c("red", rep("skyblue", 19)), 
        border="white", 
-       main = paste0("Shapiro-Wilk p-values with runif() samples", 
+       main = paste0("Shapiro-Wilk p-values under H0 (normal distribution)", 
                      "\n", "n = ", n,  "; ", repeats, " repeats", 
-                     "; Power = ", power) 
+                     "; Power = ", power),
+       las=1
   )
   abline(h=repeats/20, col="blue", lwd=2, lty="dashed")
   
@@ -148,9 +149,10 @@ for (n in n_values) {
        breaks=seq(0,1,0.05),
        col = c("#00BB00", rep("orange", 19)), 
        border="white", 
-       main = paste0("Shapiro-Wilk p-values with runif() samples", 
+       main = paste0("Shapiro-Wilk p-values under H1 (uniform distribution)", 
                      "\n", "n = ", n,  "; ", repeats, " repeats", 
-                     "; Power = ", power) 
+                     "; Power = ", power),
+       las= 1
   )
   abline(h=repeats/20, col="blue", lwd=2, lty="dashed")
   par(mfrow=c(1,1))

@@ -4,11 +4,14 @@ subtitle: "Proba/stat pour la biologie (SBGAU14L)"
 author: "Jacques van Helden (ORCID [0000-0002-8799-8584](https://orcid.org/0000-0002-8799-8584))"
 date: '`r Sys.Date()`'
 output:
-  pdf_document:
+  html_document:
+    code_folding: hide
     fig_caption: yes
     highlight: zenburn
+    theme: cerulean
     toc: yes
     toc_depth: 3
+    toc_float: yes
   word_document:
     toc: yes
     toc_depth: 3
@@ -49,14 +52,11 @@ output:
     toc: yes
     toc_float: yes
     widescreen: yes
-  html_document:
-    code_folding: hide
+  pdf_document:
     fig_caption: yes
     highlight: zenburn
-    theme: cerulean
     toc: yes
     toc_depth: 3
-    toc_float: yes
 ---
 
 ```{r settings, include=FALSE, echo=FALSE, eval=TRUE}
@@ -397,8 +397,8 @@ poi <- "Q16851" ## Protein of interest
 HCC_samples <- rownames(subset(sample_groups, group == "HCC"))
 liver_samples <- rownames(subset(sample_groups, group == "Liver"))
 
-HCC_values <-log2_LFQ[poi, HCC_samples]
-liver_values <-log2_LFQ[poi, liver_samples]
+HCC_values <- unlist(log2_LFQ[poi, HCC_samples])
+liver_values <- unlist(log2_LFQ[poi, liver_samples])
 
 welch_result <- t.test(
   x = HCC_values, y = liver_values, 
@@ -416,6 +416,23 @@ welch_result <- t.test(
   alternative = "two.sided", 
   var.equal = FALSE)
 print(welch_result)
+
+#### Compute manually the Welch statistics ####
+n1 <- sum(!is.na(HCC_values))
+n2 <- sum(!is.na(liver_values))
+s1_est <- sd(HCC_values, na.rm = TRUE)
+s2_est <- sd(liver_values, na.rm = TRUE)
+var1_est <- var(HCC_values, na.rm = TRUE)
+var2_est <- var(liver_values, na.rm = TRUE)
+m1_est <- mean(HCC_values, na.rm = TRUE)
+m2_est <- mean(liver_values, na.rm = TRUE)
+
+d <- m1_est - m2_est
+SE <- sqrt(s1_est^2/n1 + s2_est^2/n2)
+
+t_obs <- d / SE
+df <- (var1_est / n1 + var2_est /n2 )^2 / (var1_est^2/(n1^2*(n1 - 1)) + var2_est^2/(n2^2 * (n2- 1)))
+p <- pt(q = -abs(t_obs), df = df, lower.tail = TRUE) * 2
 
 
 ```
@@ -450,7 +467,7 @@ my_t <- function (values, groups, ...) {
    conf.int = t_result$conf.int,
    xbar_1 = unname(t_result$estimate[1]),
    xbar_2 = unname(t_result$estimate[2]),
-   t_result$estimate[1],
+   stderr = t_result$stderr,
    M = unname(t_result$estimate[1] - t_result$estimate[2]),
    A = unname(t_result$estimate[1] + t_result$estimate[2])/2)
  return(t_result_vector)
@@ -467,6 +484,25 @@ proteome_t <- as.data.frame(t(apply(
   var.equal = FALSE)))
 
 ## Re-compute the t statistics for checking
+
+proteome_t$n1 <- apply(log2_LFQ[rownames(proteome_t), HCC_samples], 1, function(x) {sum(!is.na(x))})
+proteome_t$n2 <- apply(log2_LFQ[rownames(proteome_t), liver_samples], 1, function(x) {sum(!is.na(x))})
+# plot(proteome_t$n1, proteome_t$n2, col = densCols(proteome_t$n1, proteome_t$n2))
+
+proteome_t$s1_est <- apply(log2_LFQ[rownames(proteome_t), HCC_samples], 1, sd, na.rm=TRUE)
+proteome_t$s2_est <- apply(log2_LFQ[rownames(proteome_t), liver_samples], 1, sd, na.rm=TRUE)
+proteome_t$SE <- sqrt(proteome_t$s1_est^2/proteome_t$n1 + proteome_t$s2_est^2/proteome_t$n2) ## Estimation of the standard error on the mean difference
+proteome_t$d <- (proteome_t$xbar_1 - proteome_t$xbar_2) ## Effect size
+proteome_t$t_check <- proteome_t$d / proteome_t$SE      ## t statistics recomputed
+
+# proteome_t$p_shapiro_HCC <- apply(log2_LFQ[rownames(proteome_t), HCC_samples], 1, shapiro.test(), na.rm)
+# proteome_t$p_shapiro_liver <- apply(log2_LFQ[rownames(proteome_t), liver_samples], 1, shapiro.test(), na.rm=TRUE)
+
+#t_obs <- d / SE
+#df <- (var1_est / n1 + var2_est /n2 )^2 / (var1_est^2/(n1^2*(n1 - 1)) + var2_est^2/(n2^2 * (n2- 1)))
+#p <- pt(q = -abs(t_obs), df = df, lower.tail = TRUE) * 2
+
+
 
 ### TO DO JvH ###
 
@@ -488,7 +524,7 @@ dir.create(result_dir, showWarnings = FALSE, recursive = TRUE)
 
 ## Tab-separated values
 write.table(proteome_t, 
-            file = file.path(result_dir, "proteome_differential_analysis.tsv"),
+            file = file.path(result_dir, "Canale23_proteome_differential_analysis.tsv"),
             sep = "\t", row.names = TRUE, col.names = NA)
 
 ## Excel file
@@ -496,7 +532,9 @@ if (!require(xlsx)) {
   install.packages("xlsx")
 }
 library(xlsx)
-write.xlsx(x = proteome_t, file = file.path(result_dir, "proteome_differential_analysis.xlsx"))
+write.xlsx(x = proteome_t, file = file.path(result_dir, "Canale23_proteome_differential_analysis.xlsx"))
+
+## system(paste("open", result_dir))
 
 ```
 
@@ -568,8 +606,8 @@ Le volcano plot est utilisé pour visualiser les résultats d'un grand ensemebl 
 y <- -log10(proteome_t$p)
 plot(proteome_t$M, 
      y, 
-     main = "Volcano plot of the proteome differential analysis\nCanale (2023)",
-     xlab = "Effect size (liver - HCC)",
+     main = "Welch test result – Volcano plot\nProteome data from Canale (2023)",
+     xlab = "Effect size: d = liver - HCC",
      ylab = "-log10(P-value)",
      col = densCols(proteome_t$M, y),
      las =  1,
@@ -607,27 +645,213 @@ text(x = to_label$M,
 
 ```
 
+****************************************************************
+## Echantillons associés par paires
+
+Les données protéomiques de Canale (2023) contiennent des échantillons associés par paire : les auteurs ont prélevé chez chaque patient un échantillon d'hépatocarcinome cellulaire et un échantillon de foie non cancéreux. L'association est cependant incomplète, pour certains patients on ne dispose que d'un des deux échantillons. 
+
+```{r sample_pairing}
+
+samples_per_patient <- table(sample_groups$sample)
+paired_samples <- names(samples_per_patient[samples_per_patient == 2])
+message("Number of patients with paired samples: ", length(paired_samples))
+
+sample_groups_paired <- subset(x = sample_groups, sample %in% paired_samples)
+# dim(sample_groups_paired)
+
+sample_groups_paired_frame <- data.frame(
+  HCC = paste0("HCC_", paired_samples),
+  Liver = paste0("Liver_", paired_samples)
+  )
+rownames(sample_groups_paired_frame) <- paired_samples
+sample_groups_paired_frame
+
+log2_LFQ_paired <- log2_LFQ[, rownames(sample_groups_paired)]
+# dim(log2_LFQ_paired)
+# View(log2_LFQ_paired)
+
+
+
+write.xlsx(x = log2_LFQ_paired, file = file.path(result_dir, "Canale23_proteome_paired_samples.xlsx"))
+
+# ## Data filtering : filter out proteins having too few numeric values in one of the groups
+# min_values_per_group <- 3
+# 
+# ## Count number of NA values per group for each protein
+# n_HCC_per_prot_paired <- apply(!is.na(log2_LFQ_paired[, sample_groups_paired_frame$HCC]), 1, sum)
+# n_liver_per_prot_paired <- apply(!is.na(log2_LFQ_paired[, sample_groups_paired_frame$Liver]), 1, sum)
+# 
+# # kable(table(n_HCC_per_prot > min_values_per_group, n_liver_per_prot > min_values_per_group))
+# selected_proteins_paired <- (n_HCC_per_prot_paired  > min_values_per_group) & (n_liver_per_prot_paired  > min_values_per_group)
+# # table(selected_proteins_paired)
+# 
+# 
+# paired_cols <- split(rownames(sample_groups_paired),
+#                      sample_groups_paired$sample)
+# paired_cols <- paired_cols[sapply(paired_cols, length) == 2]
+# 
+# 
+# 
+# ## Define a function that runs a t test and returns the quantitative results as a vector.
+# ## This enables to use it with apply() in order to run the t test on each row of a omics data table.
+# my_t_paired_bof <- function (values, groups, ...) {
+#   group_names <- unique(groups)
+#   x <- values[groups == group_names[1]]
+#   y <- values[groups == group_names[2]]
+#   
+# # t_result <- t.test(values ~ groups, ... )
+#  t_result <- t.test(x, y, ... )
+#  t_result_vector <- c(
+#    t = unname(t_result$statistic),
+#    df = unname(t_result$parameter),
+#    p = t_result$p.value,
+#    conf.int = t_result$conf.int,
+#    xbar_1 = unname(t_result$estimate[1]),
+#    xbar_2 = unname(t_result$estimate[2]),
+#    stderr = t_result$stderr,
+#    M = unname(t_result$estimate[1] - t_result$estimate[2]),
+#    A = unname(t_result$estimate[1] + t_result$estimate[2])/2)
+#  return(t_result_vector)
+# }
+# 
+# my_t_paired <- function(values, paired_cols, ...) {
+# 
+#   x <- sapply(paired_cols, function(cols) values[cols[1]])
+#   y <- sapply(paired_cols, function(cols) values[cols[2]])
+# 
+#   t_result <- t.test(x, y, paired = TRUE, ...)
+# 
+#   c(
+#     t = unname(t_result$statistic),
+#     df = unname(t_result$parameter),
+#     p = t_result$p.value,
+#     conf.int = t_result$conf.int,
+#     mean_HCC   = mean(x, na.rm=TRUE),
+#     mean_Liver = mean(y, na.rm=TRUE),
+#     stderr = t_result$stderr,
+#     M = mean(x - y, na.rm=TRUE),
+#     A = (mean(x,na.rm=TRUE) + mean(y,na.rm=TRUE)) / 2
+#   )
+# }
+# 
+# # dim(log2_LFQ_paired[selected_proteins_paired, sample_groups_paired_frame$HCC])
+# # dim(log2_LFQ_paired[selected_proteins_paired, sample_groups_paired_frame$Liver])
+# # 
+# # hist(apply(!is.na(log2_LFQ_paired[selected_proteins_paired, sample_groups_paired_frame$HCC]), 1, sum), breaks = 0:32)
+# # hist(apply(!is.na(log2_LFQ_paired[selected_proteins_paired, sample_groups_paired_frame$Liver]), 1, sum), breaks = 0:32)
+# 
+# ## Compute a table with all the t-test results. 
+# ## This returns a data frame with one row per protein and one column per statistics. 
+# proteome_t <- as.data.frame(t(apply(
+#   log2_LFQ_paired[selected_proteins_paired,], 
+#   1, my_t_paired, 
+#   unlist(sample_groups_paired$group),
+#   alternative = "two.sided", 
+#   paired = TRUE)))
+# 
+# proteome_t <- as.data.frame(t(
+#   apply(log2_LFQ_paired[selected_proteins_paired,], 
+#         1,
+#         my_t_paired,
+#         paired_cols = paired_cols,
+#         alternative = "two.sided")
+# ))
+# 
+# 
+# ## Re-compute the t statistics for checking
+# 
+# proteome_t$n1 <- apply(log2_LFQ[rownames(proteome_t), HCC_samples], 1, function(x) {sum(!is.na(x))})
+# proteome_t$n2 <- apply(log2_LFQ[rownames(proteome_t), liver_samples], 1, function(x) {sum(!is.na(x))})
+# # plot(proteome_t$n1, proteome_t$n2, col = densCols(proteome_t$n1, proteome_t$n2))
+# 
+# proteome_t$s1_est <- apply(log2_LFQ[rownames(proteome_t), HCC_samples], 1, sd, na.rm=TRUE)
+# proteome_t$s2_est <- apply(log2_LFQ[rownames(proteome_t), liver_samples], 1, sd, na.rm=TRUE)
+# proteome_t$SE <- sqrt(proteome_t$s1_est^2/proteome_t$n1 + proteome_t$s2_est^2/proteome_t$n2) ## Estimation of the standard error on the mean difference
+# proteome_t$d <- (proteome_t$xbar_1 - proteome_t$xbar_2) ## Effect size
+# proteome_t$t_check <- proteome_t$d / proteome_t$SE      ## t statistics recomputed
+# 
+# # proteome_t$p_shapiro_HCC <- apply(log2_LFQ[rownames(proteome_t), HCC_samples], 1, shapiro.test(), na.rm)
+# # proteome_t$p_shapiro_liver <- apply(log2_LFQ[rownames(proteome_t), liver_samples], 1, shapiro.test(), na.rm=TRUE)
+# 
+# #t_obs <- d / SE
+# #df <- (var1_est / n1 + var2_est /n2 )^2 / (var1_est^2/(n1^2*(n1 - 1)) + var2_est^2/(n2^2 * (n2- 1)))
+# #p <- pt(q = -abs(t_obs), df = df, lower.tail = TRUE) * 2
+# 
+# 
+# 
+# ### TO DO JvH ###
+# 
+# 
+# ## Add a column with the E-value
+# proteome_t$E <- proteome_t$p * nrow(proteome_t)  ## E-value
+# proteome_t$sig <- -log10(proteome_t$E)    ## Significance
+#   
+# ## Add a column with the protein name
+# proteome_t$gene_name <- protein_names[rownames(proteome_t), "Gene.name"]
+# proteome_t$protein_name <- protein_names[rownames(proteome_t), "Protein.name"]
+# 
+# # View(proteome_t)
+# # plot(proteome_t$M, proteome_t$t)
+# 
+# ## Export the differential analysis results
+# result_dir <- file.path(working_dir, "results")
+# dir.create(result_dir, showWarnings = FALSE, recursive = TRUE)
+# 
+# ## Tab-separated values
+# write.table(proteome_t, 
+#             file = file.path(result_dir, "Canale23_proteome_differential_analysis.tsv"),
+#             sep = "\t", row.names = TRUE, col.names = NA)
+# 
+# ## Excel file
+# if (!require(xlsx)) {
+#   install.packages("xlsx")
+# }
+# library(xlsx)
+# write.xlsx(x = proteome_t, file = file.path(result_dir, "Canale23_proteome_differential_analysis.xlsx"))
+
+```
+
 
 
 ****************************************************************
 ## Formules mathématiques
 
-- Les syboles grecs ($\mu$, $\sigma$) correspondent aux statistiques de population, les symboles romains ($\bar{x}$, $s$) aux statistiques d'échantillon.
+- Les symboles grecs ($\mu$, $\sigma$) correspondent aux statistiques de population, les symboles romains ($\bar{x}$, $s$) aux statistiques d'échantillon.
 - L'accent circonflexe ($\hat{ }$) indique les estimateurs de paramètres de population calculés à partir de paramètres d'échantillons. 
 
 | Symboles et formules       | Description   |
 |---------------------------------|----------------------------------------------------|
 | $\mu_{1},  \mu_{2}$ | Moyennes respectives des populations 1 et 2. |
+| | |
 | $\sigma_{1}, \sigma_{2}$ | Ecarts-types respectifs des populations 1 and 2. |
+| | |
 | $N_1$, $N_2$ | Tailles (nombre d'individus) des populations 1 et 2. |
+| | |
 | $n_1$, $n_2$ | Effectifs (nombre d'individus) des échantillons prélevés sur les populations 1 et 2. |
+| | |
 | $\bar{x}_{1}, \bar{x}_{2}$ | Moyennes d'échantillons. |
-| $\delta = \mu_{2} - \mu{1}$ | Différence entre les moyennes des populations. |
-| $d = \hat{\delta} = \hat{\mu}_2 - \hat{\mu}_1  = \bar{x}_2 - \bar{x}_1$ | $d$ = **Taille d'effet**: dans un test de comparaison de moyennes, il s'agit de la différence entre les moyennes d'échantillons, utilisée comme estimateur de $\delta$. |
+| | |
+| $\delta = \mu_{2} - \mu_{1}$ | Différence entre les moyennes des populations. |
+| | |
+| $d = \hat{\delta} = \hat{\mu}_2 - \hat{\mu}_1  = \bar{x}_2 - \bar{x}_1$ | $d$ = **Taille d'effet**: dans un test de comparaison de moyennes, il s'agit de la différence | | |
+entre les moyennes d'échantillons, utilisée comme estimateur de $\delta$. |
+| | |
 | $s^2_{1}, s^2_{2}$ | Variances mesurées sur les échantillons. |
+| | |
 | $\hat{\sigma}_p = \sqrt{\frac{n_1 s_1^2 + n_2 s_2^2}{n_1+n_2-2}}$ | Ecart-type groupé (*pooled standard deviation*), utilisé comme estimateur de l'écart-type commun des deux populations, en supposant leurs variances égales (hypothèse de travail d'homoscédasticité). |
+| | |
 | $\hat{\sigma}_\delta = \hat{\sigma}_p \sqrt{\left(\frac{1}{n_1}+ \frac{1}{n_2}\right)}$  | Erreur standard sur la différence entre moyennes, en supposant que les populations ont la même variance (test de Student). |
+| | |
 | $t_{S} = \frac{\hat{\delta}}{\hat{\sigma}_\delta} =  \frac{\bar{x}_{2} - \bar{x}_{1}}{\sqrt{\frac{n_1 s_{1}^2 + n_2 s_{2}^2}{n_1+n_2-2} \left(\frac{1}{n_1}+ \frac{1}{n_2}\right)}}$ | statistique $t$ de Student |
+| | |
 | $t_{W}=\frac{\bar{x}_{1} - \bar{x}_{2}}{\sqrt{\frac {s^2_{1}}{n_1} + \frac{s^2_{2}}{n_2}}}$ | statistique $t$ de Welch |
 | | |
+| $\nu_S = n_1 + n_2 -2$ | Degrees of freedom for the $t$ distribution in a Student test |
+| | |
+| $\nu_W = \frac{\left( \frac{\hat{s}_1^2}{n_1} + \frac{\hat{s}_2^2}{n_2}\right)^2}{\frac{1}{n_1-1}  \left( \frac{\hat{s}_1^2}{n_1} \right)^2 + \frac{1}{n_2-1} \left( \frac{\hat{s}_2^2}{n_2} \right)^2}$ | Welch degrees of freedom, computed from the corrected estimators of population variances $\hat{s_1}^2$ and $\hat{s_2}^2$ |
+| | |
+| $\nu_W = \frac{\left( \frac{s_1^2}{n_1-1} + \frac{s_2^2}{n_2-1}\right)^2}{\frac{s_1^4}{(n_1-1)^3} + \frac{s_2^4}{(n_2-1)^3}}$ | Welch degrees of freedom, computed from the sample variances $s_1^2$ and $s_2^2$  |
+| | |
+| | | 
+| | | 
 

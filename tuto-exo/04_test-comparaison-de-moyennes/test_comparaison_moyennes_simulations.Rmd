@@ -669,7 +669,7 @@ colnames(results_H1) <- c("t", "p")
 ttest_histograms(ttest_results = results_H1, n1 = n1, n2 = n2,
                  mu1 = mu1, mu2 = mu2, 
                  sigma1 = sigma1, sigma2 = sigma2,
-                 col_p_pos = "orange", col_p_neg = "#00BB00")
+                 col_p_pos = "#00BB00", col_p_neg = "orange")
 
 ```
 
@@ -769,6 +769,11 @@ for (a in alpha_values) {
         type = "b")
 }
 
+legend("topleft",
+       legend = paste0("alpha=",alpha_values),
+       col = alpha_col,
+       lwd = 2,
+       cex=0.9)
 
 ```
 
