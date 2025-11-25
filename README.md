@@ -24,3 +24,8 @@ Supports du cours "Probabilités et statistiques pour la biologie" (SBGAU14L) en
 | Des populations aux échantillons et retour : échantillonnage et estimation  | [sampling_exercises.Rmd](https://raw.githubusercontent.com/jvanheld/proba-stat-bio_SBGAU14L/refs/heads/main/tuto-exo/03_echantillonnage-et-estimation/sampling_exercises.Rmd) | [04_echantillonage-estimation.pdf](slides/04_echantillonage-estimation.pdf) |
 | Analyse différentielle de l'aboondance des protéines : test de comparaison de moyennes | [t_test_canale23_exercices.Rmd](https://raw.githubusercontent.com/jvanheld/proba-stat-bio_SBGAU14L/refs/heads/main/tuto-exo/04_test-comparaison-de-moyennesnes/t_test_canale23_exercises.Rmd) | [05_test-comparaison-de-moyennes.pdf](slides/05_test-comparaison-de-moyennes.pdf) |
 | Test d'ajustement | | [06_tests-ajustement.pdf](slides/06_tests-ajustement.pdf) |
+
+## Liens
+
+Web : [jvanheld.github.io/proba-stat-bio_SBGAU14L/](https://jvanheld.github.io/proba-stat-bio_SBGAU14L/)
+Dépôt code source : [github.com/jvanheld/proba-stat-bio_SBGAU14L](https://github.com/jvanheld/proba-stat-bio_SBGAU14L)
