@@ -4,14 +4,11 @@ subtitle: "Proba/stat pour la biologie (SBGAU14L)"
 author: "Jacques van Helden (ORCID [0000-0002-8799-8584](https://orcid.org/0000-0002-8799-8584))"
 date: '`r Sys.Date()`'
 output:
-  html_document:
-    code_folding: hide
+  pdf_document:
     fig_caption: yes
     highlight: zenburn
-    theme: cerulean
     toc: yes
     toc_depth: 3
-    toc_float: yes
   word_document:
     toc: yes
     toc_depth: 3
@@ -52,11 +49,14 @@ output:
     toc: yes
     toc_float: yes
     widescreen: yes
-  pdf_document:
+  html_document:
+    code_folding: hide
     fig_caption: yes
     highlight: zenburn
+    theme: cerulean
     toc: yes
     toc_depth: 3
+    toc_float: yes
 ---
 
 ```{r settings, include=FALSE, echo=FALSE, eval=TRUE}
@@ -98,36 +98,59 @@ Indiquez les formules avec les symboles, et ensuite avec les valeurs numériques
 
 ```{r}
 
-x_c <- c(7, 9, 8, 11, 14, 13)
-x_t <- c(10, 11, NA, 12, 13, 15)
+x_c <- c(6, 9, 10, 11, 13, 14)
+x_t <- c(7, 11, NA, 12, 13, 15)
 
 x <- data.frame("control" = x_c, "treated" = x_t)
+x$diff <- x$control - x$treated
 
-kable(x, row.names = TRUE)
+kable(x, row.names = TRUE, caption = "Measures for the control and treated samples resp., and sample-wise differences (paired samples). ")
 
+```
+
+```{r sample_stat}
+#### Compute statistics per sample and for their difference ####
 stat <- data.frame(
   n = apply(!is.na(x), 2, sum),
-  mean_est = apply(x, 2, mean, na.rm = TRUE),
-  var_est = apply(x, 2, var, na.rm = TRUE),
-  ssd_est = apply(x, 2, sd, na.rm = TRUE)
+  mean_est = apply(x, 2, mean, na.rm = TRUE)
 )
 
-#sample_var = apply(sweep(x = x, MARGIN = 2, STATS = stat$mean_est)^2, 2, mean, na.rm = TRUE)
-#sample_var * n / (n - 1)
+## Non-biased estimators of populaiton variance and standard deviation
+## Note: R functions var() and sd() automatically apply the correction 
+## for the systematic bias of the sample variance
+stat$var_est <- apply(x, 2, var, na.rm = TRUE)
+stat$sd_est <- apply(x, 2, sd, na.rm = TRUE)
+
+## Sample variance and standard deviation
+stat$sample_var <- stat$var_est * (stat$n -1) / stat$n
+stat$sample_sd <- sqrt(stat$sample_var)
 
 kable(t(stat))
 
 
-
 ```
+
 
 ## Exercice : test de Student
 
 On effectue un test d’égalité des moyennes avec la méthode de Student
 
 - Quelles sont les hypothèses de travail ?
+
+    - Normalité des données **ou** grands échantillons
+    - Egalité des variances de population
+
+
 - Vous semblent-elles justifiées ?
+
+    - Normalité invérifiable, test Shapiro inefficace avec de si petits échantillons (puissance extrêmement faible). La normalité est vraisemblable pour ce type de mesure $\rightarrow$ on postule la normalité
+    - Homoscédasticité: invérifiable avec de si petits échantillons (test de variance manque de puissance). L’effet du médicament pourrait varier selon les individus $\rightarrow$ on s’attend plutôt à une variance différente après et avant traitement $\rightarrow$ l'hypothèse d'homoscédasticité est contestable, il serait plus prudent de faire un test de Welch (ci-dessous)
+
+
 - Comment calculez-vous la statistique de test ? Indiquez la formule avec les symboles, puis la formule avec les valeurs numériques.  
+
+$$t_{S} =  \frac{\bar{x}_{1} - \bar{x}_{2}}{\sqrt{\frac{n_1 s_{1}^2 + n_2 s_{2}^2}{n_1+n_2-2} \left(\frac{1}{n_1}+ \frac{1}{n_2}\right)}} =  \frac{`r round(digits = 2, stat["control", "mean_est"])` - `r round(digits = 2, stat["treated", "mean_est"])`}{\sqrt{\frac{`r stat["control", "n"]` \times `r round(digits = 2, stat["control", "sample_var"])` + `r stat["treated", "n"]`\times `r round(digits = 2, stat["treated", "sample_var"])`}{9} \left(\frac{1}{`r stat["control", "n"]`}+ \frac{1}{`r stat["treated", "n"]`}\right)}}$$
+
 - Utilisez la table de la distribution fournie pour calculer le seuil de rejet de l’hypothèse nulle, avec un risque d’erreur de premier type de  0.05
 - **Effectuez le test avec la fonction t.test() de R et interprétez le résultat**
 
@@ -147,12 +170,19 @@ On effectue un test d’égalité des moyennes avec la méthode de Welch
 - Quelles sont les hypothèses de travail ?
 - Vous semblent-elles justifiées ?
 - Comment calculez-vous la statistique de test ? Indiquez la formule avec les symboles, puis la formule avec les valeurs numériques.  
-- Utilisez la table de la distribution fournie pour calculer le seuil de rejet de l’hypothèse nulle, avec un risque d’erreur de premier type de  0.05
+
+$$t_{W}=\frac{\bar{x}_{1} ~-~ \bar{x}_{2}}{\sqrt{\frac {s^2_{1}}{n_1 ~-~ 1} + \frac{s^2_{2}}{n_2 ~-~ 1}}} ~=~ \frac{`r round(digits = 2, stat["control", "mean_est"])` - `r round(digits = 2, stat["treated", "mean_est"])`}{\sqrt{\frac {`r round(digits = 2, stat["control", "sample_var"])`}{`r stat["control", "n"] - 1`} + \frac{`r round(digits = 2, stat["treated", "sample_var"])`}{`r stat["treated", "n"] - 1`}}}$$
+
+- Nous vous fournissons les degrés de liberté calculés d'après la formule de Welch : $\nu = 8.75$. Utilisez la table de la distribution fournie pour calculer le seuil de rejet de l’hypothèse nulle, avec un risque d’erreur de premier type de $0.05$. 
+
+
+    - Zone d'acceptation de $H_0$: de -2.262 à +2.262
+
 - **Effectuez le test avec la fonction t.test() de R et interprétez le résultat**
 
 
 
-```{r student_test}
+```{r welch_test}
 
 t.test(x$control, x$treated, alternative = "two.sided", var.equal = FALSE, paired = FALSE)
 
@@ -164,20 +194,30 @@ t.test(x$control, x$treated, alternative = "two.sided", var.equal = FALSE, paire
 On effectue un test d’égalité des moyennes avec la méthode de Student basé sur les échantillons appariés
 
 - Quelles sont les hypothèses de travail ?
+
+    - Normalité des données ou grands échantillons
+
 - Vous semblent-elles justifiées ?
+
+    - Normalité invérifiable, test Shapiro inefficace avec de si petits éch., mais raisonnable pour ce type de mesure → on postule la normalité
+
 - Comment calculez-vous la statistique de test ? Indiquez la formule avec les symboles, puis la formule avec les valeurs numériques.  
+
+$$t_p ~=~ \frac{\hat{\delta}}{\hat{\sigma}_\delta} ~=~ \frac{\bar{d}}{s_d / \sqrt{n-1}} ~=~  \frac{`r stat["diff","mean_est"]`}{`r round(digits=2, stat["diff","sample_sd"])`  / \sqrt{`r stat["diff","n"] ` -1}}$$
+
 - Utilisez la table de la distribution fournie pour calculer le seuil de rejet de l’hypothèse nulle, avec un risque d’erreur de premier type de  0.05
 - **Effectuez le test avec la fonction t.test() de R et interprétez le résultat**
 
 
 
-```{r student_test}
+```{r student_test_paired}
 
 t.test(x$control, x$treated, alternative = "two.sided", var.equal = TRUE, paired = TRUE)
 
 ```
 
 
+## Proteome data example
 
 
 ```{r}
