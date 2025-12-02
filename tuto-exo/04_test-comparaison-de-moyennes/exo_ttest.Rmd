@@ -81,7 +81,7 @@ options(scipen = 12) ## Max number of digits for non-scientific notation
 
 ```
 
-## Exercice 1
+## Exercice : échantillonnage et estimation
 
 On a testé l’effet un médicament, en mesurant sur 6 souris le taux d’immunoglobuline avant (contrôle) et après le traitement (test). Pour le test, l’une des 6 mesures a échoué, on a donc une valeur non définie (NA). 
 
@@ -125,10 +125,35 @@ stat$sd_est <- apply(x, 2, sd, na.rm = TRUE)
 stat$sample_var <- stat$var_est * (stat$n -1) / stat$n
 stat$sample_sd <- sqrt(stat$sample_var)
 
-kable(t(stat))
+kable(t(stat), digits = 2)
 
 
 ```
+
+
+### Formule de la moyenne
+
+$$\hat{\mu}_1 =\bar{x}_{1} ~=~ \frac{1}{n_1}\displaystyle\sum_{i=1}^{n_1} x_{1i} = \frac{1}{6}(6 +9 + 10 + 11 + 13 + 14)$$
+
+$$  \hat{\mu}_2 ~=~ \bar{x}_{2} ~=~  \frac{1}{n_2}\displaystyle\sum_{i=1}^{n_2} x_{2i} = \frac{1}{5} (7 + 11 + 12 + 13 + 15)$$
+
+### Formule de la variance
+
+$$\begin{aligned}
+\hat{\sigma}^2_1 &= \frac{n_1}{n_1-1} s^2_{1} = \frac{1}{n_1-1}\displaystyle\sum_{i=1}^{n_1} (x_{1i} ~-~ \bar{x}_1)^2  \\
+&= \frac{1}{n_1-1} \left( \displaystyle\sum_{i=1}^{n_1} x_{1i}^2  - n_1 \bar{x_1}^2  \right) \\
+&= \frac{1}{5} \left( (6^2 + 9^2 + 10^2 + 11^2 + 13^2 + 14^2) -  \frac{1}{6} (6 +9 + 10 + 11 + 13 + 14)^2  \right) \\
+\\
+\hat{\sigma}^2_2 &= \frac{n_2}{n_2-1} s^2_{2} = \frac{1}{n_2-1}\displaystyle\sum_{i=1}^{n_2} (x_{2i} ~-~ \bar{x}_2)^2  \\
+&= \frac{1}{n_2-1} \left( \displaystyle\sum_{i=1}^{n_2} x_{2i}^2  - n_2 \bar{x_2}^2   \right) \\
+&= \frac{1}{4} \left( (7^2 + 11^2 + 12^2 + 13^2 + 15^2)-  \frac{1}{5} (7 + 11 + 12 + 13 + 15)^2  \right)
+\end{aligned}$$
+
+### Formule de l'écart-type
+
+$$\hat{\sigma}_1 ~=~ \sqrt{\hat{\sigma}^2_1}$$
+
+$$\hat{\sigma}_2 ~=~ \sqrt{\hat{\sigma}^2_2}$$
 
 
 ## Exercice : test de Student
