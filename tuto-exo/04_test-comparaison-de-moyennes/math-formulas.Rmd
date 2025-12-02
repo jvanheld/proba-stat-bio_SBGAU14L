@@ -221,7 +221,7 @@ arrows(x0=-t_threshold, x1 = t_threshold, y0 = 0.5, y1 = 0.5, col = "#00BB00", l
 | | |
 | $n_1$, $n_2$ | Effectifs (nombre d'individus) des échantillons prélevés sur les populations 1 et 2. |
 | | |
-| $\hat{\mu}_1 =\bar{x}_{1} ~=~ \displaystyle\sum_{i=1}^{n_1} x_{1i} \; ; \;  \hat{\mu}_2 ~=~ \bar{x}_{2} ~=~ \displaystyle\sum_{i=1}^{n_2} x_{2i}$ | Moyennes d'échantillons, utilisées comme estimateurs non biaisés des moyennes des populations respectives |
+| $\hat{\mu}_1 =\bar{x}_{1} ~=~ \frac{1}{n_1}\displaystyle\sum_{i=1}^{n_1} x_{1i} \; ; \;  \hat{\mu}_2 ~=~ \bar{x}_{2} ~=~  \frac{1}{n_2}\displaystyle\sum_{i=1}^{n_2} x_{2i}$ | Moyennes d'échantillons, utilisées comme estimateurs non biaisés des moyennes des populations respectives |
 | | |
 | $\delta ~=~ \mu_{2} ~-~ \mu_{1}$ | Différence entre les moyennes des populations. |
 | | |
@@ -230,7 +230,7 @@ entre les moyennes d'échantillons, utilisée comme estimateur de $\delta$. |
 | | |
 | $s^2_{1}, s^2_{2}$ | Variances mesurées sur les échantillons. |
 | | |
-| $\hat{\sigma}^2_1 ~=~ \frac{n_1}{n_1-1} s^2_{1} ~=~ \frac{1}{n_1-1}\displaystyle\sum_{i=1}^{n_1} (x_{1i} ~-~ \bar{x}_2)^2 \quad$ $\hat{\sigma}^2_2 ~=~ \frac{n_2}{n_2-1} s^2_{2} ~=~ \frac{1}{n_2-1}\displaystyle\sum_{i=1}^{n_2} (x_{2i} ~-~ \bar{x}_2)^2$ | Estimateurs corrigés (non biaisés) de la variance des populations respectives |  
+| $\hat{\sigma}^2_1 ~=~ \frac{n_1}{n_1-1} s^2_{1} ~=~ \frac{1}{n_1-1}\displaystyle\sum_{i=1}^{n_1} (x_{1i} ~-~ \bar{x}_1)^2 \quad$ $\hat{\sigma}^2_2 ~=~ \frac{n_2}{n_2-1} s^2_{2} ~=~ \frac{1}{n_2-1}\displaystyle\sum_{i=1}^{n_2} (x_{2i} ~-~ \bar{x}_2)^2$ | Estimateurs corrigés (non biaisés) de la variance des populations respectives |  
 | | |
 | $\hat{\sigma}_1 ~=~ \sqrt{\hat{\sigma}^2_1} \; ; \; \hat{\sigma}_2 ~=~ \sqrt{\hat{\sigma}^2_2}$ | Estimateurs corrigés (non biaisés) de l'écart-type des populations respectives |  
 | | |
